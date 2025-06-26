@@ -181,6 +181,24 @@ st.markdown("""
         font-size: 11px;
         color: #666;
     }
+    
+    /* Linha clicável */
+    .clickable-row {
+        cursor: pointer !important;
+        transition: background-color 0.2s;
+    }
+    
+    .clickable-row:hover {
+        background-color: #E8F4FD !important;
+    }
+    
+    /* Esconder botões de seleção */
+    .hidden-buttons {
+        position: absolute !important;
+        left: -9999px !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -197,6 +215,8 @@ if 'soap_data' not in st.session_state:
     st.session_state.soap_data = {
         'S': '', 'O': '', 'A': '', 'P': ''
     }
+if 'consultation_soap_data' not in st.session_state:
+    st.session_state.consultation_soap_data = {}
 
 # Gerar consultas (só uma vez)
 def generate_consultations():
@@ -211,6 +231,34 @@ def generate_consultations():
             "SOUSA, CATARINA ISABEL", "CARVALHO, JOSÉ ANTÓNIO", "FERNANDES, LUÍSA MARIA"
         ]
         
+        # Dados SOAP pré-preenchidos para algumas consultas
+        soap_examples = {
+            0: {  # SILVA, JOÃO CARLOS
+                'S': 'Paciente queixa-se de dor torácica há 2 dias, tipo pontada, que piora com esforço. Nega dispneia ou palpitações. Refere episódios anteriores similares.',
+                'O': 'TA: 140/85 mmHg, FC: 78 bpm, FR: 16 irpm, Temp: 36.2°C. Auscultação cardíaca: sopro sistólico grau II/VI. Auscultação pulmonar normal. Abdómen mole, depressível.',
+                'A': 'Dor torácica atípica. Suspeita de cardiopatia isquémica. Hipertensão arterial controlada.',
+                'P': 'ECG + Analises (troponinas, colesterol). Referenciação para cardiologia. Manter anti-hipertensor. Reavaliação em 1 semana.'
+            },
+            1: {  # FERREIRA, ANTÓNIO MANUEL
+                'S': 'Paciente diabético tipo 2, vem para consulta de rotina. Refere cumprimento da medicação. Nega sintomas de hipoglicemia. Dieta controlada.',
+                'O': 'Peso: 78kg, IMC: 26.5. TA: 130/80 mmHg. Glicemia capilar: 145 mg/dl. Pés sem lesões. Pulsos periféricos presentes.',
+                'A': 'Diabetes mellitus tipo 2 em controlo razoável. Ligeiro excesso de peso.',
+                'P': 'Manter metformina 850mg 2x/dia. HbA1c + perfil lipídico. Consulta nutrição. Retorno em 3 meses.'
+            },
+            2: {  # RODRIGUES, ISABEL MARIA
+                'S': 'Consulta de planeamento familiar. Pretende método contraceptivo eficaz. Menarca aos 13 anos, ciclos regulares. G2P2, último parto há 3 anos.',
+                'O': 'TA: 120/70 mmHg, peso 62kg, altura 165cm. Exame ginecológico: normal. Mamas: sem alterações palpáveis.',
+                'A': 'Mulher jovem saudável solicitando contracepção.',
+                'P': 'Prescrição contraceptivo oral combinado. Orientações sobre uso correto. Citologia cervical anual. Retorno em 6 meses.'
+            },
+            3: {  # ALMEIDA, TERESA CRISTINA (consulta em destaque)
+                'S': 'Paciente com febre há 3 dias (38-39°C), tosse produtiva, expectoração amarelada, dor torácica ao tossir. Nega dispneia significativa.',
+                'O': 'Estado geral: regular. Temp: 38.5°C, TA: 110/70 mmHg, FC: 95 bpm, FR: 22 irpm. Auscultação: fervores crepitantes base direita.',
+                'A': 'Pneumonia adquirida na comunidade, provável bacteriana.',
+                'P': 'Amoxicilina+ác.clavulânico 1g 12/12h x 7 dias. Paracetamol se febre. RX tórax. Reavaliação em 48h se não melhorar.'
+            }
+        }
+        
         for i in range(12):
             time_slot = (today.replace(hour=8, minute=30) + timedelta(minutes=30*i)).strftime("%H:%M")
             consultation = {
@@ -223,6 +271,10 @@ def generate_consultations():
                 'status': 'Agendada'
             }
             consultations.append(consultation)
+            
+            # Adicionar dados SOAP se existirem para esta consulta
+            if i in soap_examples:
+                st.session_state.consultation_soap_data[i] = soap_examples[i]
         
         st.session_state.consultations = consultations
     
@@ -269,10 +321,10 @@ def show_consultations_screen():
         st.markdown("""
         <div style="background-color: #F0F0F0; border: 1px solid #ccc; margin-bottom: 10px;">
             <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
-                📅 Agenda - 07.07.2018 - Consultas do Dia
+                📅 Agenda - {} - Consultas do Dia
             </div>
         </div>
-        """, unsafe_allow_html=True)
+        """.format(datetime.now().strftime("%d.%m.%Y")), unsafe_allow_html=True)
         
         # Cabeçalho das consultas
         st.markdown("""
@@ -290,66 +342,68 @@ def show_consultations_screen():
         # Gerar consultas
         consultations = generate_consultations()
         
-        # JavaScript para seleção e duplo clique
-        st.markdown("""
-        <script>
-            function selectConsultation(id) {
-                // Simular clique no botão correspondente
-                const button = document.querySelector(`[data-testid="stButton"][title*="${id}"]`);
-                if (button) {
-                    button.click();
-                }
-            }
-            
-            function openSOAP(id) {
-                // Primeiro selecionar a consulta
-                selectConsultation(id);
-                // Depois abrir SOAP (simular clique no botão SOAP)
-                setTimeout(() => {
-                    const soapButton = document.querySelector('[data-testid="stButton"] button[title*="SOAP"]');
-                    if (soapButton && !soapButton.disabled) {
-                        soapButton.click();
-                    }
-                }, 100);
-            }
-        </script>
-        """, unsafe_allow_html=True)
-        
-        # Lista de consultas com clique direto
+        # Lista de consultas com botões funcionais
         for i, consultation in enumerate(consultations):
             is_selected = consultation['id'] == st.session_state.selected_consultation_id
             bg_color = "#B4D7FF" if is_selected else "#FFFFFF" if i % 2 == 0 else "#F8F8F8"
             
-            # Consulta em destaque (tipo SClínico)
+            # Consulta em destaque (tipo SClínico) - paciente em espera
             if i == 7:  # Uma consulta em destaque
                 bg_color = "#4472C4"
                 text_color = "white"
+                status = "Em Espera"
             else:
                 text_color = "black"
+                status = "Livre"
             
-            st.markdown(f"""
-            <div style="display: flex; background-color: {bg_color}; color: {text_color}; padding: 3px 5px; border: 1px solid #ccc; font-size: 10px; cursor: pointer;" 
-                 onclick="selectConsultation('{consultation['id']}')" ondblclick="openSOAP('{consultation['id']}')">
-                <div style="width: 60px;">{consultation['time']}</div>
-                <div style="width: 60px;">{(datetime.strptime(consultation['time'], '%H:%M') + timedelta(minutes=30)).strftime('%H:%M')}</div>
-                <div style="width: 80px;">{'Em Espera' if i == 7 else 'Livre'}</div>
-                <div style="width: 120px;">{consultation['patient_number']}</div>
-                <div style="flex: 1; font-weight: bold; cursor: pointer;" onclick="openSOAP('{consultation['id']}')" 
-                     title="Clique para selecionar, duplo-clique para abrir SOAP">{consultation['patient']}</div>
-                <div style="width: 80px;">S Adultos</div>
-                <div style="width: 40px;">M</div>
-            </div>
-            """, unsafe_allow_html=True)
+            # Indicador se tem dados SOAP
+            soap_indicator = "📋" if consultation['id'] in st.session_state.consultation_soap_data else ""
             
-        # Botões invisíveis para seleção (necessários para o Streamlit)
-        st.markdown('<div style="display: none;">', unsafe_allow_html=True)
-        for consultation in consultations:
-            if st.button(f"Select", key=f"sel_{consultation['id']}", 
-                        help=f"Selecionar {consultation['patient']}", 
-                        disabled=False):
-                st.session_state.selected_consultation_id = consultation['id']
-                st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+            # Criar colunas para a linha da consulta
+            cols = st.columns([0.6, 0.6, 0.8, 1.2, 3, 0.8, 0.4, 0.5])
+            
+            with cols[0]:
+                st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">{consultation["time"]}</div>', unsafe_allow_html=True)
+            
+            with cols[1]:
+                end_time = (datetime.strptime(consultation['time'], '%H:%M') + timedelta(minutes=30)).strftime('%H:%M')
+                st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">{end_time}</div>', unsafe_allow_html=True)
+            
+            with cols[2]:
+                st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">{status}</div>', unsafe_allow_html=True)
+            
+            with cols[3]:
+                st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">{consultation["patient_number"]}</div>', unsafe_allow_html=True)
+            
+            with cols[4]:
+                # Botão clicável para o nome do paciente
+                patient_button_key = f"patient_{consultation['id']}"
+                if st.button(f"{soap_indicator} {consultation['patient']}", 
+                           key=patient_button_key,
+                           help="Clique para selecionar, duplo-clique para abrir SOAP",
+                           use_container_width=True):
+                    if st.session_state.selected_consultation_id == consultation['id']:
+                        # Duplo clique simulado - se já estava selecionado, abre SOAP
+                        st.session_state.current_screen = 'soap'
+                        st.rerun()
+                    else:
+                        # Primeiro clique - seleciona
+                        st.session_state.selected_consultation_id = consultation['id']
+                        st.rerun()
+            
+            with cols[5]:
+                st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">S Adultos</div>', unsafe_allow_html=True)
+            
+            with cols[6]:
+                st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">M</div>', unsafe_allow_html=True)
+            
+            with cols[7]:
+                # Botão SOAP individual
+                soap_key = f"soap_{consultation['id']}"
+                if st.button("📋", key=soap_key, help="Abrir SOAP", disabled=False):
+                    st.session_state.selected_consultation_id = consultation['id']
+                    st.session_state.current_screen = 'soap'
+                    st.rerun()
         
         # Informações do médico
         st.markdown("""
@@ -358,7 +412,7 @@ def show_consultations_screen():
                 <div style="flex: 1;">
                     <strong>AGREGADO FAMILIAR:</strong><br>
                     <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
-                        <div>🔹 LISBOA</div>
+                        <div>🔹 Família selecionada</div>
                         <div>Andrea Ramalho Areias Baptista 26|21|05 1500</div>
                         <div>Ana Sousa Baptista Barreiros Graf 34|03|05 2000</div>
                         <div>Teresinha Marcellino Garcez Lisboa 44|21|05 2012</div>
@@ -369,9 +423,9 @@ def show_consultations_screen():
                     <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 80px;">
                         <div style="font-size: 10px;">
                             <div>📅 Próximas consultas:</div>
-                            <div>02/07/2018 - Consulta de Enfermagem - Lucinda</div>
-                            <div>02/07/2018 - Consulta de Enfermagem - Lucinda</div>
-                            <div>02/07/2018 - Consulta de Enfermagem - Lucinda</div>
+                            <div>02/07/2025 - Consulta de Enfermagem - Lucinda</div>
+                            <div>15/07/2025 - Consulta Médica - Dr. Cardoso</div>
+                            <div>20/07/2025 - Consulta de Enfermagem - Lucinda</div>
                         </div>
                     </div>
                 </div>
@@ -392,15 +446,15 @@ def show_consultations_screen():
                     <div>Todos os Períodos</div>
                 </div>
                 <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 400px;">
-                    <div>Consultas:</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
-                    <div>S Adultos - M</div>
+                    <div><strong>Consultas anteriores:</strong></div>
+                    <div>📋 25/06 - SILVA, JOÃO - Cardiologia</div>
+                    <div>📋 24/06 - FERREIRA, ANTÓNIO - Diabetes</div>
+                    <div>📋 24/06 - RODRIGUES, ISABEL - Plan. Familiar</div>
+                    <div>📋 23/06 - ALMEIDA, TERESA - Pneumonia</div>
+                    <div>22/06 - SANTOS, MARIA - Rotina</div>
+                    <div>22/06 - COSTA, ANA - Hipertensão</div>
+                    <div>21/06 - PEREIRA, CARLOS - Check-up</div>
+                    <div>21/06 - OLIVEIRA, MANUEL - Ortopedia</div>
                 </div>
             </div>
         </div>
@@ -433,21 +487,29 @@ def show_soap_screen():
         return
     
     # Informações do utente
+    age = datetime.now().year - int(selected_consultation['birth_date'][:4])
     st.markdown(f"""
     <div class="patient-info-box">
         <strong>Utente:</strong> {selected_consultation['patient']} | 
         <strong>Nº:</strong> {selected_consultation['patient_number']} | 
-        <strong>Data Nasc:</strong> {selected_consultation['birth_date']} | 
+        <strong>Data Nasc:</strong> {selected_consultation['birth_date']} ({age} anos) | 
         <strong>Hora:</strong> {selected_consultation['time']}
     </div>
     """, unsafe_allow_html=True)
     
-    # 3º Passo: Número de utente
+    # Número de utente
     st.markdown("**Número de Utente:**")
     patient_number = st.text_input("", value=selected_consultation['patient_number'], key="patient_num")
     st.session_state.patient_number = patient_number
     
-    # 4º Passo: Caixas SOAP alinhadas à esquerda
+    # Carregar dados SOAP existentes se houver
+    consultation_id = selected_consultation['id']
+    if consultation_id in st.session_state.consultation_soap_data:
+        saved_soap = st.session_state.consultation_soap_data[consultation_id]
+    else:
+        saved_soap = {'S': '', 'O': '', 'A': '', 'P': ''}
+    
+    # Registo SOAP
     st.markdown("**Registo SOAP:**")
     
     # Container para as caixas SOAP
@@ -455,25 +517,34 @@ def show_soap_screen():
     
     # S - Subjetivo
     st.markdown('<div class="soap-label">S - Subjetivo</div>', unsafe_allow_html=True)
-    soap_s = st.text_area("", height=80, key="soap_s", placeholder="Sintomas e queixas do utente...")
-    st.session_state.soap_data['S'] = soap_s
+    soap_s = st.text_area("", height=80, key="soap_s", 
+                         value=saved_soap['S'],
+                         placeholder="Sintomas e queixas do utente...")
     
     # O - Objetivo  
     st.markdown('<div class="soap-label">O - Objetivo</div>', unsafe_allow_html=True)
-    soap_o = st.text_area("", height=80, key="soap_o", placeholder="Observações clínicas, exame físico...")
-    st.session_state.soap_data['O'] = soap_o
+    soap_o = st.text_area("", height=80, key="soap_o", 
+                         value=saved_soap['O'],
+                         placeholder="Observações clínicas, exame físico...")
     
     # A - Avaliação
     st.markdown('<div class="soap-label">A - Avaliação</div>', unsafe_allow_html=True)
-    soap_a = st.text_area("", height=80, key="soap_a", placeholder="Diagnóstico e avaliação clínica...")
-    st.session_state.soap_data['A'] = soap_a
+    soap_a = st.text_area("", height=80, key="soap_a", 
+                         value=saved_soap['A'],
+                         placeholder="Diagnóstico e avaliação clínica...")
     
     # P - Plano
     st.markdown('<div class="soap-label">P - Plano</div>', unsafe_allow_html=True)
-    soap_p = st.text_area("", height=80, key="soap_p", placeholder="Plano terapêutico e seguimento...")
-    st.session_state.soap_data['P'] = soap_p
+    soap_p = st.text_area("", height=80, key="soap_p", 
+                         value=saved_soap['P'],
+                         placeholder="Plano terapêutico e seguimento...")
     
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Atualizar dados da sessão
+    st.session_state.soap_data = {
+        'S': soap_s, 'O': soap_o, 'A': soap_a, 'P': soap_p
+    }
     
     # Botões de ação
     st.markdown("---")
@@ -481,11 +552,35 @@ def show_soap_screen():
     
     with col1:
         if st.button("Guardar", key="save_soap"):
+            # Guardar dados SOAP para esta consulta
+            st.session_state.consultation_soap_data[consultation_id] = {
+                'S': soap_s, 'O': soap_o, 'A': soap_a, 'P': soap_p
+            }
             st.success("✅ SOAP guardado!")
     
     with col2:
         if st.button("Imprimir", key="print_soap"):
             st.info("🖨️ Enviado para impressão")
+            # Mostrar prévia
+            with st.expander("📄 Prévia da impressão"):
+                st.markdown(f"""
+                **REGISTO SOAP - {selected_consultation['patient']}**
+                
+                **Data:** {now.strftime("%d/%m/%Y %H:%M")}  
+                **Utente:** {selected_consultation['patient_number']}
+                
+                **S - Subjetivo:**  
+                {soap_s or "Não preenchido"}
+                
+                **O - Objetivo:**  
+                {soap_o or "Não preenchido"}
+                
+                **A - Avaliação:**  
+                {soap_a or "Não preenchido"}
+                
+                **P - Plano:**  
+                {soap_p or "Não preenchido"}
+                """)
     
     with col3:
         if st.button("Exportar", key="export_soap"):
@@ -493,14 +588,18 @@ def show_soap_screen():
             export_data = {
                 "utente_numero": st.session_state.patient_number,
                 "utente_nome": selected_consultation['patient'],
+                "utente_idade": age,
                 "data_consulta": datetime.now().strftime("%Y-%m-%d"),
                 "hora_consulta": selected_consultation['time'],
+                "medico": "Dr(a) Bessa Cardoso",
+                "unidade": "Ucsp Bremer Porto",
                 "soap": {
-                    "subjetivo": st.session_state.soap_data['S'],
-                    "objetivo": st.session_state.soap_data['O'], 
-                    "avaliacao": st.session_state.soap_data['A'],
-                    "plano": st.session_state.soap_data['P']
-                }
+                    "subjetivo": soap_s,
+                    "objetivo": soap_o, 
+                    "avaliacao": soap_a,
+                    "plano": soap_p
+                },
+                "timestamp": now.isoformat()
             }
             st.success("📤 Dados exportados para Power Automate!")
             with st.expander("Ver dados exportados"):
