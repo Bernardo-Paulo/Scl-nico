@@ -229,82 +229,205 @@ def generate_consultations():
     return st.session_state.consultations
 
 def show_consultations_screen():
-    # Header
-    st.markdown('<div class="sclinico-header">SClínico - Consultas do Dia</div>', unsafe_allow_html=True)
+    # Header azul do SClínico
+    st.markdown("""
+    <div style="background-color: #4472C4; color: white; padding: 5px 10px; margin: -1rem -2rem 0 -2rem; font-size: 14px; font-weight: bold;">
+        📋 SClínico - Dr(a) Bessa Cardoso - Ucsp Bremer Porto
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Data e hora
-    now = datetime.now()
-    st.markdown(f'<div class="date-info">{now.strftime("%d/%m/%Y %H:%M")}</div>', unsafe_allow_html=True)
+    # Barra de ferramentas
+    st.markdown("""
+    <div style="background-color: #E7E6E6; padding: 8px; margin: 0 -2rem; border-bottom: 1px solid #ccc;">
+        <div style="display: flex; align-items: center; gap: 15px; font-size: 12px;">
+            <span>Perfil: MÉDICO</span>
+            <span>AGENDA</span>
+            <span style="color: #0066CC;">▶ Consultas do Dia</span>
+            <span>Consultas Urgentes</span>
+            <span>Consultas Domiciliárias</span>
+            <span style="margin-left: auto;">{}</span>
+        </div>
+    </div>
+    """.format(datetime.now().strftime("%d/%m/%Y %H:%M")), unsafe_allow_html=True)
     
-    # Botão SOAP no topo
-    st.markdown('<div class="soap-button-container">', unsafe_allow_html=True)
-    col1, col2, col3 = st.columns([1, 8, 1])
+    # Layout principal em 3 colunas
+    col1, col2, col3 = st.columns([2, 6, 2])
+    
+    with col1:
+        # Calendário
+        st.markdown("""
+        <div style="background-color: #F0F0F0; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <div style="background-color: #4472C4; color: white; text-align: center; padding: 3px; font-size: 12px; font-weight: bold;">
+                {} 2018
+            </div>
+            <div style="text-align: center; padding: 5px;">
+                <table style="width: 100%; font-size: 10px;">
+                    <tr style="background-color: #ddd;">
+                        <td>D</td><td>S</td><td>T</td><td>Q</td><td>Q</td><td>S</td><td>S</td>
+                    </tr>
+                    <tr><td></td><td></td><td></td><td></td><td></td><td>1</td><td>2</td></tr>
+                    <tr><td>3</td><td>4</td><td>5</td><td>6</td><td style="background-color: #FFF2CC;">7</td><td>8</td><td>9</td></tr>
+                    <tr><td>10</td><td>11</td><td>12</td><td>13</td><td>14</td><td>15</td><td>16</td></tr>
+                    <tr><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td></tr>
+                    <tr><td>24</td><td>25</td><td>26</td><td>27</td><td>28</td><td>29</td><td>30</td></tr>
+                    <tr><td>31</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
+        </div>
+        """.format(datetime.now().strftime("%B")), unsafe_allow_html=True)
+        
+        # Notas/Tarefas
+        st.markdown("""
+        <div style="background-color: #F0F0F0; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+            <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
+                NOTAS/TAREFAS DO DIA
+            </div>
+            <div style="padding: 5px; font-size: 10px; min-height: 60px;">
+                <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
+                    Data: <input type="text" style="border: none; width: 60px;">
+                </div>
+                <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
+                    Assunto: <input type="text" style="border: none; width: 80px;">
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Mensagens
+        st.markdown("""
+        <div style="background-color: #F0F0F0; border: 1px solid #ccc; padding: 10px;">
+            <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
+                MENSAGENS INTERNAS
+            </div>
+            <div style="padding: 5px; font-size: 10px; min-height: 40px;">
+                Nova Mensagem: <input type="text" style="border: 1px solid #ccc; width: 80px; font-size: 9px;">
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        # Lista de consultas principal
+        st.markdown("""
+        <div style="background-color: #F0F0F0; border: 1px solid #ccc; margin-bottom: 10px;">
+            <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
+                📅 Agenda - 07.07.2018 - Consultas do Dia
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Cabeçalho das consultas
+        st.markdown("""
+        <div style="display: flex; background-color: #E7E6E6; padding: 5px; border: 1px solid #ccc; font-size: 11px; font-weight: bold;">
+            <div style="width: 60px;">H. Iníc</div>
+            <div style="width: 60px;">H. Fim</div>
+            <div style="width: 80px;">Estado</div>
+            <div style="width: 120px;">Processo</div>
+            <div style="flex: 1;">Nome do Utente</div>
+            <div style="width: 80px;">Consultas</div>
+            <div style="width: 40px;">Tipo</div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Gerar consultas
+        consultations = generate_consultations()
+        
+        # Lista de consultas
+        for i, consultation in enumerate(consultations):
+            is_selected = consultation['id'] == st.session_state.selected_consultation_id
+            bg_color = "#B4D7FF" if is_selected else "#FFFFFF" if i % 2 == 0 else "#F8F8F8"
+            
+            # Consulta em destaque (tipo SClínico)
+            if i == 7:  # Uma consulta em destaque
+                bg_color = "#4472C4"
+                text_color = "white"
+            else:
+                text_color = "black"
+            
+            st.markdown(f"""
+            <div style="display: flex; background-color: {bg_color}; color: {text_color}; padding: 3px 5px; border: 1px solid #ccc; font-size: 10px; cursor: pointer;" 
+                 onclick="selectConsultation({consultation['id']})">
+                <div style="width: 60px;">{consultation['time']}</div>
+                <div style="width: 60px;">{(datetime.strptime(consultation['time'], '%H:%M') + timedelta(minutes=30)).strftime('%H:%M')}</div>
+                <div style="width: 80px;">{'Em Espera' if i == 7 else 'Livre'}</div>
+                <div style="width: 120px;">{consultation['patient_number']}</div>
+                <div style="flex: 1;">{consultation['patient']}</div>
+                <div style="width: 80px;">S Adultos</div>
+                <div style="width: 40px;">M</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Botão invisível para seleção
+            if st.button(f"Selecionar {consultation['time']}", key=f"sel_{consultation['id']}", 
+                        help=consultation['patient']):
+                st.session_state.selected_consultation_id = consultation['id']
+                st.rerun()
+        
+        # Informações do médico
+        st.markdown("""
+        <div style="background-color: #F0F0F0; border: 1px solid #ccc; padding: 8px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+                <div>
+                    <strong>AGREGADO FAMILIAR:</strong><br>
+                    <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
+                        <div>🔹 LISBOA</div>
+                        <div>Andrea Ramalho Areias Baptista 26|21|05 1500</div>
+                        <div>Ana Sousa Baptista Barreiros Graf 34|03|05 2000</div>
+                        <div>Teresinha Marcellino Garcez Lisboa 44|21|05 2012</div>
+                    </div>
+                </div>
+                <div style="margin-left: 20px;">
+                    <strong>CONSULTAS AGENDADAS:</strong><br>
+                    <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 80px;">
+                        <div style="font-size: 10px;">
+                            <div>📅 Próximas consultas:</div>
+                            <div>02/07/2018 - Consulta de Enfermagem</div>
+                            <div>02/07/2018 - Consulta de Enfermagem</div>
+                            <div>02/07/2018 - Consulta de Enfermagem</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col3:
+        # Últimas consultas
+        st.markdown("""
+        <div style="background-color: #F0F0F0; border: 1px solid #ccc; padding: 10px;">
+            <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
+                ÚLTIMAS CONSULTAS
+            </div>
+            <div style="padding: 5px; font-size: 10px;">
+                <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
+                    <div style="font-weight: bold;">Horário - Previsões</div>
+                    <div>Todos os Períodos</div>
+                </div>
+                <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 200px;">
+                    <div>Consultas:</div>
+                    <div>S Adultos - M</div>
+                    <div>S Adultos - M</div>
+                    <div>S Adultos - M</div>
+                    <div>S Adultos - M</div>
+                    <div>S Adultos - M</div>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Botão SOAP na parte inferior
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 1, 8])
     with col1:
         soap_disabled = st.session_state.selected_consultation_id is None
-        if st.button("SOAP", disabled=soap_disabled, key="soap_btn"):
+        if st.button("📋 SOAP", disabled=soap_disabled, key="soap_btn", 
+                    help="Abrir registo SOAP da consulta selecionada"):
             if st.session_state.selected_consultation_id is not None:
                 st.session_state.current_screen = 'soap'
                 st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
     
-    # Gerar consultas
-    consultations = generate_consultations()
-    
-    # Tabela de consultas
-    st.markdown("**Consultas Agendadas:**")
-    
-    # Criar tabela HTML
-    table_html = """
-    <table class="consultation-table">
-        <thead>
-            <tr>
-                <th>Hora</th>
-                <th>Nome do Utente</th>
-                <th>Nº de Utente</th>
-                <th>Data Nasc.</th>
-                <th>Gabinete</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-    """
-    
-    for consultation in consultations:
-        selected_class = "selected" if consultation['id'] == st.session_state.selected_consultation_id else ""
-        table_html += f"""
-            <tr class="consultation-row {selected_class}" onclick="selectConsultation({consultation['id']})">
-                <td>{consultation['time']}</td>
-                <td>{consultation['patient']}</td>
-                <td>{consultation['patient_number']}</td>
-                <td>{consultation['birth_date']}</td>
-                <td>{consultation['room']}</td>
-                <td>{consultation['status']}</td>
-            </tr>
-        """
-    
-    table_html += """
-        </tbody>
-    </table>
-    
-    <script>
-        function selectConsultation(id) {
-            // Usar o sistema de callback do Streamlit seria ideal aqui
-            // Por agora, usaremos os botões individuais
-        }
-    </script>
-    """
-    
-    st.markdown(table_html, unsafe_allow_html=True)
-    
-    # Botões invisíveis para seleção (workaround)
-    st.markdown("**Selecionar consulta:**")
-    cols = st.columns(6)
-    for i, consultation in enumerate(consultations):
-        with cols[i % 6]:
-            if st.button(f"{consultation['time']}", key=f"select_{consultation['id']}", 
-                        help=f"Selecionar {consultation['patient']}"):
-                st.session_state.selected_consultation_id = consultation['id']
-                st.rerun()
+    with col2:
+        if st.button("🔄 Atualizar", key="refresh_btn"):
+            st.rerun()
 
 def show_soap_screen():
     # Header
