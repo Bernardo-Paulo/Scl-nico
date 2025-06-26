@@ -154,6 +154,32 @@ st.markdown("""
         height: auto;
     }
     
+    /* Botão do nome do paciente - mesmo estilo do texto */
+    .patient-name-button button {
+        background-color: transparent !important;
+        border: none !important;
+        color: black !important;
+        font-size: 10px !important;
+        font-weight: bold !important;
+        padding: 3px !important;
+        height: auto !important;
+        text-align: left !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    
+    .patient-name-button button:hover {
+        background-color: #E8F4FD !important;
+        color: black !important;
+    }
+    
+    .patient-name-button button:focus {
+        background-color: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+    
     .stTextArea textarea {
         font-size: 11px !important;
         font-family: Arial, sans-serif !important;
@@ -227,11 +253,10 @@ def generate_consultations():
         names = [
             "SILVA, JOÃO CARLOS", "SANTOS, MARIA JOSÉ", "FERREIRA, ANTÓNIO MANUEL", 
             "COSTA, ANA RITA", "PEREIRA, CARLOS ALBERTO", "RODRIGUES, ISABEL MARIA",
-            "OLIVEIRA, MANUEL JOAQUIM", "ALMEIDA, TERESA CRISTINA", "MARTINS, FRANCISCO JOSÉ",
-            "SOUSA, CATARINA ISABEL", "CARVALHO, JOSÉ ANTÓNIO", "FERNANDES, LUÍSA MARIA"
+            "OLIVEIRA, MANUEL JOAQUIM"
         ]
         
-        # Dados SOAP pré-preenchidos para algumas consultas
+        # Dados SOAP pré-preenchidos para os primeiros 5 utentes
         soap_examples = {
             0: {  # SILVA, JOÃO CARLOS
                 'S': 'Paciente queixa-se de dor torácica há 2 dias, tipo pontada, que piora com esforço. Nega dispneia ou palpitações. Refere episódios anteriores similares.',
@@ -239,27 +264,33 @@ def generate_consultations():
                 'A': 'Dor torácica atípica. Suspeita de cardiopatia isquémica. Hipertensão arterial controlada.',
                 'P': 'ECG + Analises (troponinas, colesterol). Referenciação para cardiologia. Manter anti-hipertensor. Reavaliação em 1 semana.'
             },
-            1: {  # FERREIRA, ANTÓNIO MANUEL
+            1: {  # SANTOS, MARIA JOSÉ
+                'S': 'Paciente refere cefaleia há 1 semana, tipo pressão, localizada na região occipital. Piora com stress e melhora com repouso. Nega náuseas ou alterações visuais.',
+                'O': 'TA: 160/95 mmHg, FC: 82 bpm, temperatura: 36.1°C. Exame neurológico: sem alterações. Fundo de olho: sem papiledema. Pescoço: sem rigidez.',
+                'A': 'Cefaleia tensional. Hipertensão arterial não controlada.',
+                'P': 'Aumentar dose de anti-hipertensor. Paracetamol 1g se dor. Medição TA domiciliária. Retorno em 1 semana.'
+            },
+            2: {  # FERREIRA, ANTÓNIO MANUEL
                 'S': 'Paciente diabético tipo 2, vem para consulta de rotina. Refere cumprimento da medicação. Nega sintomas de hipoglicemia. Dieta controlada.',
                 'O': 'Peso: 78kg, IMC: 26.5. TA: 130/80 mmHg. Glicemia capilar: 145 mg/dl. Pés sem lesões. Pulsos periféricos presentes.',
                 'A': 'Diabetes mellitus tipo 2 em controlo razoável. Ligeiro excesso de peso.',
                 'P': 'Manter metformina 850mg 2x/dia. HbA1c + perfil lipídico. Consulta nutrição. Retorno em 3 meses.'
             },
-            2: {  # RODRIGUES, ISABEL MARIA
-                'S': 'Consulta de planeamento familiar. Pretende método contraceptivo eficaz. Menarca aos 13 anos, ciclos regulares. G2P2, último parto há 3 anos.',
-                'O': 'TA: 120/70 mmHg, peso 62kg, altura 165cm. Exame ginecológico: normal. Mamas: sem alterações palpáveis.',
-                'A': 'Mulher jovem saudável solicitando contracepção.',
-                'P': 'Prescrição contraceptivo oral combinado. Orientações sobre uso correto. Citologia cervical anual. Retorno em 6 meses.'
+            3: {  # COSTA, ANA RITA
+                'S': 'Jovem de 28 anos com queixas de ansiedade e insónia há 3 semanas. Refere stress laboral aumentado. Nega sintomas depressivos. Sem antecedentes psiquiátricos.',
+                'O': 'Estado geral: bom. TA: 115/70 mmHg, FC: 88 bpm. Orientada no tempo e espaço. Humor: ansioso. Discurso: coerente.',
+                'A': 'Perturbação de ansiedade relacionada com stress. Insónia secundária.',
+                'P': 'Técnicas de relaxamento. Higiene do sono. Valeriana 300mg ao deitar. Reavaliação em 2 semanas. Se não melhorar, considerar ansiolítico.'
             },
-            3: {  # ALMEIDA, TERESA CRISTINA (consulta em destaque)
-                'S': 'Paciente com febre há 3 dias (38-39°C), tosse produtiva, expectoração amarelada, dor torácica ao tossir. Nega dispneia significativa.',
-                'O': 'Estado geral: regular. Temp: 38.5°C, TA: 110/70 mmHg, FC: 95 bpm, FR: 22 irpm. Auscultação: fervores crepitantes base direita.',
-                'A': 'Pneumonia adquirida na comunidade, provável bacteriana.',
-                'P': 'Amoxicilina+ác.clavulânico 1g 12/12h x 7 dias. Paracetamol se febre. RX tórax. Reavaliação em 48h se não melhorar.'
+            4: {  # PEREIRA, CARLOS ALBERTO
+                'S': 'Paciente de 45 anos com lombalgia há 5 dias após carregar peso. Dor tipo mecânica, sem irradiação. Melhora com repouso e anti-inflamatórios.',
+                'O': 'Marcha: normal. Coluna lombar: contratura muscular paravertebral. Lasègue: negativo bilateral. Força e sensibilidade membros inferiores: normal.',
+                'A': 'Lombalgia mecânica aguda. Contratura muscular paravertebral.',
+                'P': 'Ibuprofeno 600mg 8/8h x 5 dias. Aplicação calor local. Evitar esforços. Fisioterapia se não melhorar. Retorno SOS.'
             }
         }
         
-        for i in range(12):
+        for i in range(7):  # Reduzido para 7 utentes
             time_slot = (today.replace(hour=8, minute=30) + timedelta(minutes=30*i)).strftime("%H:%M")
             consultation = {
                 'id': i,
@@ -346,15 +377,8 @@ def show_consultations_screen():
         for i, consultation in enumerate(consultations):
             is_selected = consultation['id'] == st.session_state.selected_consultation_id
             bg_color = "#B4D7FF" if is_selected else "#FFFFFF" if i % 2 == 0 else "#F8F8F8"
-            
-            # Consulta em destaque (tipo SClínico) - paciente em espera
-            if i == 7:  # Uma consulta em destaque
-                bg_color = "#4472C4"
-                text_color = "white"
-                status = "Em Espera"
-            else:
-                text_color = "black"
-                status = "Livre"
+            text_color = "black"
+            status = "Livre"
             
             # Indicador se tem dados SOAP
             soap_indicator = "📋" if consultation['id'] in st.session_state.consultation_soap_data else ""
@@ -376,6 +400,8 @@ def show_consultations_screen():
                 st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">{consultation["patient_number"]}</div>', unsafe_allow_html=True)
             
             with cols[4]:
+                # Container com estilo para o botão do nome
+                st.markdown(f'<div style="background-color: {bg_color}; border: 1px solid #ccc; padding: 0; margin: 0;" class="patient-name-button">', unsafe_allow_html=True)
                 # Botão clicável para o nome do paciente
                 patient_button_key = f"patient_{consultation['id']}"
                 if st.button(f"{soap_indicator} {consultation['patient']}", 
@@ -390,6 +416,7 @@ def show_consultations_screen():
                         # Primeiro clique - seleciona
                         st.session_state.selected_consultation_id = consultation['id']
                         st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
             
             with cols[5]:
                 st.markdown(f'<div style="background-color: {bg_color}; color: {text_color}; padding: 3px; border: 1px solid #ccc; font-size: 10px; text-align: center;">S Adultos</div>', unsafe_allow_html=True)
