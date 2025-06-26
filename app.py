@@ -1,650 +1,292 @@
 import streamlit as st
 import pandas as pd
-from datetime import datetime
-import calendar
+from datetime import datetime, timedelta
+import random
 
 # Configuração da página
 st.set_page_config(
-    page_title="SClínico - Dr(a) Bessa Cardoso - UCSP Breiner Porto",
+    page_title="SClínico - Sistema de Gestão Clínica",
     page_icon="🏥",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
-# CSS personalizado para replicar exatamente o SClínico
+# CSS personalizado para simular o aspeto do SClínico
 st.markdown("""
 <style>
-    /* Reset padrão do Streamlit */
-    .main > div {
-        padding: 0px;
-    }
-    
-    /* Barra de título */
-    .title-bar {
-        background: linear-gradient(to bottom, #e8e8e8, #d0d0d0);
-        border: 1px solid #999;
-        padding: 3px 8px;
-        font-size: 11px;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        color: #333;
-        margin-bottom: 0px;
-    }
-    
-    /* Barra de menu */
-    .menu-bar {
-        background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
-        border: 1px solid #ccc;
-        border-top: none;
-        padding: 4px;
-        font-size: 11px;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        margin-bottom: 2px;
-    }
-    
-    /* Container principal */
-    .main-container {
-        background-color: #f0f0f0;
-        border: 1px solid #999;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        font-size: 11px;
-    }
-    
-    /* Painel esquerdo */
-    .left-panel {
-        background-color: #f8f8f8;
-        border-right: 1px solid #ccc;
-        padding: 8px;
-        min-height: 600px;
-    }
-    
-    /* Calendário */
-    .calendar-section {
-        background-color: white;
-        border: 1px solid #ccc;
-        margin-bottom: 10px;
-        padding: 5px;
-    }
-    
-    .calendar-header {
-        background: linear-gradient(to bottom, #4a90e2, #357abd);
+    .main-header {
+        background-color: #2E86AB;
         color: white;
+        padding: 1rem;
+        border-radius: 5px;
         text-align: center;
-        padding: 3px;
-        font-size: 11px;
-        font-weight: bold;
-        margin: -5px -5px 5px -5px;
+        margin-bottom: 2rem;
     }
     
-    .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 1px;
-        font-size: 10px;
-    }
-    
-    .calendar-day {
-        text-align: center;
-        padding: 2px;
+    .consultation-card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        background-color: #f8f9fa;
         cursor: pointer;
-        background-color: white;
+        transition: background-color 0.3s;
     }
     
-    .calendar-day:hover {
-        background-color: #e6f3ff;
-    }
-    
-    .calendar-day.today {
-        background-color: #4a90e2;
-        color: white;
-        font-weight: bold;
-    }
-    
-    .calendar-day.selected {
-        background-color: #357abd;
-        color: white;
-    }
-    
-    /* Seções */
-    .section-title {
-        background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-        border: 1px solid #999;
-        padding: 2px 5px;
-        font-size: 11px;
-        font-weight: bold;
-        margin: 8px 0 2px 0;
-    }
-    
-    .section-content {
-        background-color: white;
-        border: 1px solid #ccc;
-        border-top: none;
-        padding: 5px;
-        min-height: 80px;
-    }
-    
-    /* Painel central - lista de consultas */
-    .center-panel {
-        background-color: white;
-        padding: 0px;
-    }
-    
-    .consultation-header {
-        background: linear-gradient(to bottom, #4a90e2, #357abd);
-        color: white;
-        padding: 8px;
-        font-size: 12px;
-        font-weight: bold;
-        border-bottom: 1px solid #ccc;
-    }
-    
-    .consultation-controls {
-        background-color: #f0f0f0;
-        padding: 5px 8px;
-        border-bottom: 1px solid #ccc;
-        font-size: 11px;
-    }
-    
-    .consultation-table {
-        background-color: white;
-    }
-    
-    .consultation-table-header {
-        background: linear-gradient(to bottom, #e8e8e8, #d8d8d8);
-        border-bottom: 1px solid #ccc;
-        padding: 4px 8px;
-        font-size: 11px;
-        font-weight: bold;
-        color: #333;
-    }
-    
-    .consultation-row {
-        border-bottom: 1px solid #e0e0e0;
-        padding: 3px 8px;
-        font-size: 11px;
-        cursor: pointer;
-        background-color: white;
-    }
-    
-    .consultation-row:hover {
-        background-color: #f0f8ff;
-    }
-    
-    .consultation-row.selected {
-        background-color: #4a90e2;
-        color: white;
-    }
-    
-    .consultation-row.waiting {
-        background-color: #ffffe0;
-    }
-    
-    /* Painel direito */
-    .right-panel {
-        background-color: #f8f8f8;
-        border-left: 1px solid #ccc;
-        padding: 8px;
-        min-height: 600px;
-    }
-    
-    /* Seções do painel direito */
-    .right-section {
-        margin-bottom: 15px;
-    }
-    
-    .right-section-title {
-        background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-        border: 1px solid #999;
-        padding: 2px 5px;
-        font-size: 10px;
-        font-weight: bold;
-        margin-bottom: 2px;
-    }
-    
-    .right-section-content {
-        background-color: white;
-        border: 1px solid #ccc;
-        border-top: none;
-        padding: 5px;
-        font-size: 10px;
-        min-height: 60px;
-    }
-    
-    /* Botões */
-    .sclinico-button {
-        background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
-        border: 1px solid #999;
-        padding: 2px 8px;
-        font-size: 11px;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        cursor: pointer;
-        margin: 2px;
-    }
-    
-    .sclinico-button:hover {
-        background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-    }
-    
-    .sclinico-button:active {
-        background: linear-gradient(to bottom, #d0d0d0, #e0e0e0);
-    }
-    
-    /* SOAP Interface */
-    .soap-container {
-        background-color: #f0f0f0;
-        padding: 0px;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-    }
-    
-    .soap-header {
-        background: linear-gradient(to bottom, #4a90e2, #357abd);
-        color: white;
-        padding: 8px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    
-    .soap-toolbar {
-        background-color: #f0f0f0;
-        padding: 5px;
-        border-bottom: 1px solid #ccc;
-    }
-    
-    .soap-sections {
-        display: flex;
-        flex-direction: column;
-        height: 500px;
+    .consultation-card:hover {
+        background-color: #e9ecef;
     }
     
     .soap-section {
-        flex: 1;
-        display: flex;
-        border-bottom: 1px solid #ccc;
-    }
-    
-    .soap-section:last-child {
-        border-bottom: none;
-    }
-    
-    .soap-letter {
-        background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-        border-right: 1px solid #ccc;
-        width: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: bold;
-        color: #333;
-    }
-    
-    .soap-content {
-        flex: 1;
-        background-color: white;
-        padding: 0px;
-    }
-    
-    /* Tabs do lado direito */
-    .right-tabs {
-        background-color: #f0f0f0;
         border: 1px solid #ccc;
-        margin-bottom: 10px;
-    }
-    
-    .tab-header {
-        background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-        padding: 3px 8px;
-        font-size: 10px;
-        font-weight: bold;
-        border-bottom: 1px solid #ccc;
-    }
-    
-    .tab-content {
+        border-radius: 5px;
+        padding: 1rem;
+        margin: 0.5rem 0;
         background-color: white;
-        padding: 5px;
-        font-size: 10px;
-        min-height: 100px;
     }
     
-    /* Remover estilos do Streamlit */
-    .stButton > button {
-        background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
-        border: 1px solid #999;
-        padding: 2px 8px;
-        font-size: 11px;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        color: #333;
-        border-radius: 0px;
-        height: auto;
+    .patient-info {
+        background-color: #e3f2fd;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-bottom: 1rem;
     }
     
-    .stButton > button:hover {
-        background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
-        border: 1px solid #999;
-        color: #333;
-    }
-    
-    .stTextArea > div > div > textarea {
-        background-color: white;
-        border: 1px solid #ccc;
-        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        font-size: 11px;
-        border-radius: 0px;
+    .button-container {
+        text-align: center;
+        margin: 2rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # Inicializar estado da sessão
 if 'current_screen' not in st.session_state:
-    st.session_state.current_screen = 'agenda'
-if 'selected_patient' not in st.session_state:
-    st.session_state.selected_patient = None
+    st.session_state.current_screen = 'consultas'
+if 'selected_consultation' not in st.session_state:
+    st.session_state.selected_consultation = None
+if 'patient_number' not in st.session_state:
+    st.session_state.patient_number = ''
+if 'soap_data' not in st.session_state:
+    st.session_state.soap_data = {
+        'S': '', 'O': '', 'A': '', 'P': ''
+    }
 
-# Dados das consultas (exatamente como no SClínico)
-consultas_data = [
-    {"hora": "09:00", "jul": "1", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "09:30", "jul": "2", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "10:15", "jul": "3", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "11:00", "jul": "4", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "11:30", "jul": "5", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "12:15", "jul": "6", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "12:54", "jul": "7", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "13:01", "jul": "8", "ano": "2018", "estado": "Em Espera", "nome": "José Cristina Santos Estácio", "consultas": "24 anos", "info": "▼ Adultos", "elect": "M", "agendado": ""},
-    {"hora": "13:33", "jul": "9", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "14:12", "jul": "10", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "14:21", "jul": "11", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "15:30", "jul": "12", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "16:09", "jul": "13", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "17:27", "jul": "14", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "18:06", "jul": "15", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "18:45", "jul": "16", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "19:24", "jul": "17", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""},
-    {"hora": "20:02", "jul": "18", "ano": "2018", "estado": "Processado", "nome": "▼ Adultos", "consultas": "M", "info": "M", "elect": "", "agendado": ""}
-]
+# Dados simulados das consultas
+def generate_consultations():
+    """Gera consultas simuladas para o dia"""
+    consultations = []
+    today = datetime.now()
+    
+    # Nomes portugueses comuns
+    names = [
+        "João Silva", "Maria Santos", "António Ferreira", "Ana Costa",
+        "Carlos Pereira", "Isabel Rodrigues", "Manuel Oliveira", "Teresa Almeida",
+        "Francisco Martins", "Catarina Sousa", "José Carvalho", "Luísa Fernandes"
+    ]
+    
+    # Especialidades médicas
+    specialties = [
+        "Medicina Geral e Familiar", "Cardiologia", "Pediatria", 
+        "Ginecologia", "Ortopedia", "Dermatologia"
+    ]
+    
+    for i in range(8):
+        time_slot = (today.replace(hour=9, minute=0) + timedelta(minutes=30*i)).strftime("%H:%M")
+        consultation = {
+            'id': f'C{i+1:03d}',
+            'time': time_slot,
+            'patient': random.choice(names),
+            'patient_number': f'{random.randint(100000000, 999999999)}',
+            'specialty': random.choice(specialties),
+            'doctor': f'Dr. {random.choice(["Silva", "Costa", "Ferreira", "Santos"])}',
+            'status': random.choice(['Agendada', 'Em curso', 'Concluída'])
+        }
+        consultations.append(consultation)
+    
+    return consultations
 
-def generate_calendar():
-    """Gera o calendário de julho 2018"""
-    cal = calendar.monthcalendar(2018, 7)
+def show_consultations_screen():
+    """Mostra o ecrã das consultas do dia"""
+    st.markdown('<div class="main-header"><h1>🏥 SClínico - Consultas do Dia</h1></div>', unsafe_allow_html=True)
     
-    calendar_html = """
-    <div class="calendar-section">
-        <div class="calendar-header">JUL 2018</div>
-        <div class="calendar-grid">
-            <div class="calendar-day" style="font-weight: bold;">S</div>
-            <div class="calendar-day" style="font-weight: bold;">T</div>
-            <div class="calendar-day" style="font-weight: bold;">Q</div>
-            <div class="calendar-day" style="font-weight: bold;">Q</div>
-            <div class="calendar-day" style="font-weight: bold;">S</div>
-            <div class="calendar-day" style="font-weight: bold;">S</div>
-            <div class="calendar-day" style="font-weight: bold;">D</div>
-    """
+    # Data atual
+    today = datetime.now().strftime("%d/%m/%Y")
+    st.markdown(f"### 📅 Consultas de {today}")
     
-    for week in cal:
-        for day in week:
-            if day == 0:
-                calendar_html += '<div class="calendar-day"></div>'
-            elif day == 5:  # 5 de julho (hoje)
-                calendar_html += f'<div class="calendar-day today">{day}</div>'
-            else:
-                calendar_html += f'<div class="calendar-day">{day}</div>'
+    # Gerar consultas
+    consultations = generate_consultations()
     
-    calendar_html += """
-        </div>
-    </div>
-    """
-    return calendar_html
-
-def show_agenda_screen():
-    """Mostra o ecrã principal com a agenda exatamente como no SClínico"""
-    
-    # Barra de título
-    st.markdown('<div class="title-bar">SClínico - Dr(a) Bessa Cardoso - UCSP Breiner Porto</div>', unsafe_allow_html=True)
-    
-    # Barra de menu
-    st.markdown('<div class="menu-bar">Perfil MEDICO ▼ | AGENDA | ▶ Consultas do Dia | Consultas Urgentes | Consultas Domiciliares | Medidas LESCO CARDOSO ▼ | Horário - Períodos Todos os Períodos ▼</div>', unsafe_allow_html=True)
-    
-    # Container principal
-    col1, col2, col3 = st.columns([2, 6, 2])
-    
-    with col1:
-        st.markdown('<div class="left-panel">', unsafe_allow_html=True)
+    # Mostrar consultas em cards
+    for consultation in consultations:
+        col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
         
-        # Calendário
-        st.markdown(generate_calendar(), unsafe_allow_html=True)
+        with col1:
+            st.write(f"**{consultation['time']}**")
+            st.write(f"Paciente: {consultation['patient']}")
         
-        # Notas/Tarefas do dia
-        st.markdown('<div class="section-title">NOTAS/TAREFAS DO DIA</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-content">Data: <br/>Assunto:</div>', unsafe_allow_html=True)
+        with col2:
+            st.write(f"Nº Utente: {consultation['patient_number']}")
+            st.write(f"Especialidade: {consultation['specialty']}")
         
-        # Nova Mensagem
-        st.markdown('<div class="section-title">MENSAGENS INTERNAS</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-content">Nova Mensagem | [dropdown icon]</div>', unsafe_allow_html=True)
+        with col3:
+            st.write(f"Médico: {consultation['doctor']}")
+            status_color = "🟢" if consultation['status'] == 'Concluída' else "🟡" if consultation['status'] == 'Em curso' else "🔴"
+            st.write(f"Estado: {status_color} {consultation['status']}")
         
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="center-panel">', unsafe_allow_html=True)
-        
-        # Header das consultas
-        st.markdown('<div class="consultation-header">▶ Consultas do Dia | Consultas Urgentes | Consultas Domiciliares</div>', unsafe_allow_html=True)
-        
-        # Controles
-        st.markdown('<div class="consultation-controls">▶ Dia Escolhido | Executar | Medica | LESCO CARDOSO</div>', unsafe_allow_html=True)
-        
-        # Botão principal para nova consulta
-        if st.button("📋 Nova Consulta / Registo Clínico", key="new_consultation", type="primary"):
-            st.session_state.current_screen = 'consulta'
-            st.rerun()
-        
-        st.markdown('<br>', unsafe_allow_html=True)
-        
-        # Cabeçalho da tabela
-        header_html = """
-        <div class="consultation-table">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 1fr 1fr; background: linear-gradient(to bottom, #e8e8e8, #d8d8d8); border-bottom: 1px solid #ccc; padding: 4px 8px; font-size: 11px; font-weight: bold;">
-                <div>Hora</div>
-                <div>Jul</div>
-                <div>Ano</div>
-                <div>Estado</div>
-                <div>Processos</div>
-                <div>Nome do Utente</div>
-                <div>Consulta</div>
-                <div>Info</div>
-            </div>
-        """
-        
-        # Linhas de dados
-        for i, consulta in enumerate(consultas_data):
-            row_class = "consultation-row"
-            if consulta["estado"] == "Em Espera":
-                row_class += " waiting"
-                
-            onclick_script = f"""
-            <div class="{row_class}" onclick="document.getElementById('patient_btn_{i}').click();">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 3fr 1fr 1fr 1fr 1fr; padding: 3px 8px;">
-                    <div>{consulta["hora"]}</div>
-                    <div>{consulta["jul"]}</div>
-                    <div>{consulta["ano"]}</div>
-                    <div>{consulta["estado"]}</div>
-                    <div></div>
-                    <div>{consulta["nome"]}</div>
-                    <div>{consulta["consultas"]}</div>
-                    <div>{consulta["info"]}</div>
-                </div>
-            </div>
-            """
-            header_html += onclick_script
-            
-            # Botão invisível para capturar o clique
-            if st.button("", key=f"patient_btn_{i}", help=f"Abrir consulta - {consulta['nome']}", 
-                        label_visibility="hidden"):
-                st.session_state.selected_patient = consulta
-                st.session_state.current_screen = 'consulta'
+        with col4:
+            if st.button(f"Abrir SOAP", key=f"btn_{consultation['id']}", type="primary"):
+                st.session_state.selected_consultation = consultation
+                st.session_state.current_screen = 'soap'
                 st.rerun()
         
-        header_html += "</div>"
-        st.markdown(header_html, unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.divider()
+    
+    # Botão para Power Automate (simulação)
+    st.markdown('<div class="button-container">', unsafe_allow_html=True)
+    if st.button("🔄 Sincronizar com Power Automate", type="secondary"):
+        st.success("Dados sincronizados com Power Automate!")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+def show_soap_screen():
+    """Mostra o ecrã do SOAP"""
+    if st.session_state.selected_consultation is None:
+        st.error("Nenhuma consulta selecionada!")
+        return
+    
+    consultation = st.session_state.selected_consultation
+    
+    st.markdown('<div class="main-header"><h1>🏥 SClínico - Registo SOAP</h1></div>', unsafe_allow_html=True)
+    
+    # Botão Sair no topo
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col1:
+        if st.button("← Sair", key="exit_soap", type="secondary"):
+            st.session_state.current_screen = 'consultas'
+            st.rerun()
+    
+    # Informações do paciente
+    st.markdown('<div class="patient-info">', unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        st.write(f"**Paciente:** {consultation['patient']}")
+        st.write(f"**Hora:** {consultation['time']}")
+    with col2:
+        st.write(f"**Médico:** {consultation['doctor']}")
+        st.write(f"**Especialidade:** {consultation['specialty']}")
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # 3º Passo: Guardar número de utente
+    st.markdown("### 3º Passo: Número de Utente")
+    patient_number = st.text_input(
+        "Número de Utente:",
+        value=consultation['patient_number'],
+        key="patient_number_input"
+    )
+    st.session_state.patient_number = patient_number
+    
+    # 4º Passo: Dados SOAP
+    st.markdown("### 4º Passo: Registo SOAP")
+    
+    # S - Subjetivo
+    st.markdown('<div class="soap-section">', unsafe_allow_html=True)
+    st.markdown("**S - Subjetivo (Sintomas relatados pelo paciente)**")
+    soap_s = st.text_area(
+        "Queixas do paciente, história da doença atual:",
+        height=100,
+        key="soap_s",
+        placeholder="Ex: Paciente refere dor de cabeça há 3 dias, localizada na região temporal..."
+    )
+    st.session_state.soap_data['S'] = soap_s
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # O - Objetivo
+    st.markdown('<div class="soap-section">', unsafe_allow_html=True)
+    st.markdown("**O - Objetivo (Observações clínicas)**")
+    soap_o = st.text_area(
+        "Exame físico, sinais vitais, exames complementares:",
+        height=100,
+        key="soap_o",
+        placeholder="Ex: TA: 120/80 mmHg, FC: 75 bpm, Temp: 36.5°C. Exame neurológico normal..."
+    )
+    st.session_state.soap_data['O'] = soap_o
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # A - Avaliação
+    st.markdown('<div class="soap-section">', unsafe_allow_html=True)
+    st.markdown("**A - Avaliação (Diagnóstico)**")
+    soap_a = st.text_area(
+        "Diagnóstico principal e diferenciais:",
+        height=100,
+        key="soap_a",
+        placeholder="Ex: Cefaleia tensional. Excluir causas secundárias..."
+    )
+    st.session_state.soap_data['A'] = soap_a
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # P - Plano
+    st.markdown('<div class="soap-section">', unsafe_allow_html=True)
+    st.markdown("**P - Plano (Tratamento e seguimento)**")
+    soap_p = st.text_area(
+        "Tratamento, medicação, seguimento:",
+        height=100,
+        key="soap_p",
+        placeholder="Ex: Paracetamol 1g 8/8h SOS. Reavaliação em 7 dias se persistir..."
+    )
+    st.session_state.soap_data['P'] = soap_p
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Botões de ação
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("💾 Guardar SOAP", type="primary"):
+            st.success("Registo SOAP guardado com sucesso!")
+            
+    with col2:
+        if st.button("📄 Gerar Relatório", type="secondary"):
+            # Mostrar resumo dos dados guardados
+            st.info("**Dados Guardados:**")
+            st.write(f"**Nº Utente:** {st.session_state.patient_number}")
+            for key, value in st.session_state.soap_data.items():
+                if value:
+                    st.write(f"**{key}:** {value[:100]}{'...' if len(value) > 100 else ''}")
     
     with col3:
-        st.markdown('<div class="right-panel">', unsafe_allow_html=True)
-        
-        # Agendado Familiar
-        st.markdown('<div class="right-section-title">AGENDADO FAMILIAR</div>', unsafe_allow_html=True)
-        st.markdown('<div class="right-section-content">45678</div>', unsafe_allow_html=True)
-        
-        # Consultas Agendadas
-        st.markdown('<div class="right-section-title">CONSULTAS AGENDADAS</div>', unsafe_allow_html=True)
-        st.markdown('<div class="right-section-content">Médico<br/>Andrea Remcho Areas Bazilio<br/>Teresita Alexandrina Garces Leitao</div>', unsafe_allow_html=True)
-        
-        # Últimas consultas
-        st.markdown('<div class="right-section-title">ÚLTIMAS CONSULTAS</div>', unsafe_allow_html=True)
-        st.markdown('<div class="right-section-content">Profissional<br/>02/07/2018 Consulta de Enfermagem Licinda<br/>02/07/2018 Consulta Licinda<br/>02/07/2018 Consulta Licinda</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("🔄 Enviar Power Automate", type="secondary"):
+            # Simular envio para Power Automate
+            data_to_send = {
+                "patient_number": st.session_state.patient_number,
+                "consultation_time": consultation['time'],
+                "soap_data": st.session_state.soap_data,
+                "timestamp": datetime.now().isoformat()
+            }
+            st.success("Dados enviados para Power Automate!")
+            st.json(data_to_send)
 
-def show_consultation_screen():
-    """Mostra o ecrã de consulta SOAP exatamente como no SClínico"""
-    
-    patient_name = st.session_state.selected_patient["nome"] if st.session_state.selected_patient else "LESCO MARCELA ARAUJO CARDOSO"
-    
-    # Barra de título
-    st.markdown(f'<div class="title-bar">Registo Clínico da Consulta - Dr(a) Bessa Cardoso - UCSP Breiner Porto</div>', unsafe_allow_html=True)
-    
-    # Header da consulta
-    st.markdown(f'<div class="soap-header">Nome: {patient_name} | Utente: 52 anos | BI/Brasao: 11919855</div>', unsafe_allow_html=True)
-    
-    # Toolbar
-    toolbar_html = """
-    <div class="soap-toolbar">
-        <span>Episódio corrente:</span>
-    </div>
-    """
-    st.markdown(toolbar_html, unsafe_allow_html=True)
-    
-    # Layout principal
-    main_col, right_col = st.columns([4, 1])
-    
-    with main_col:
-        # Seções SOAP
-        st.markdown('<div class="soap-sections">', unsafe_allow_html=True)
-        
-        # Seção S
-        st.markdown('''
-        <div class="soap-section">
-            <div class="soap-letter">S</div>
-            <div class="soap-content">
-        ''', unsafe_allow_html=True)
-        
-        s_content = st.text_area("", height=120, key="soap_s", label_visibility="hidden", 
-                                placeholder="Sintomas subjetivos, queixas do paciente...")
-        
-        st.markdown('</div></div>', unsafe_allow_html=True)
-        
-        # Seção O
-        st.markdown('''
-        <div class="soap-section">
-            <div class="soap-letter">O</div>
-            <div class="soap-content">
-        ''', unsafe_allow_html=True)
-        
-        o_content = st.text_area("", height=120, key="soap_o", label_visibility="hidden",
-                                placeholder="Observações objetivas, exame físico, sinais vitais...")
-        
-        st.markdown('</div></div>', unsafe_allow_html=True)
-        
-        # Seção A
-        st.markdown('''
-        <div class="soap-section">
-            <div class="soap-letter">A</div>
-            <div class="soap-content">
-        ''', unsafe_allow_html=True)
-        
-        a_content = st.text_area("", height=120, key="soap_a", label_visibility="hidden",
-                                placeholder="Avaliação, diagnóstico, impressão clínica...")
-        
-        st.markdown('</div></div>', unsafe_allow_html=True)
-        
-        # Seção P
-        st.markdown('''
-        <div class="soap-section">
-            <div class="soap-letter">P</div>
-            <div class="soap-content">
-        ''', unsafe_allow_html=True)
-        
-        p_content = st.text_area("", height=120, key="soap_p", label_visibility="hidden",
-                                placeholder="Plano terapêutico, medicação, seguimento...")
-        
-        st.markdown('</div></div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with right_col:
-        # Tabs do lado direito
-        st.markdown('''
-        <div class="right-tabs">
-            <div class="tab-header">Alertas</div>
-            <div class="tab-content"></div>
-        </div>
-        ''', unsafe_allow_html=True)
-        
-        st.markdown('''
-        <div class="right-tabs">
-            <div class="tab-header">Episódios activos</div>
-            <div class="tab-content"></div>
-        </div>
-        ''', unsafe_allow_html=True)
-        
-        st.markdown('''
-        <div class="right-tabs">
-            <div class="tab-header">Consulta corrente</div>
-            <div class="tab-content"></div>
-        </div>
-        ''', unsafe_allow_html=True)
-        
-        st.markdown('''
-        <div class="right-tabs">
-            <div class="tab-header">Todos os episódios</div>
-            <div class="tab-content"></div>
-        </div>
-        ''', unsafe_allow_html=True)
-    
-    # Botões de ação na parte inferior
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    button_col1, button_col2, button_col3, button_col4, button_col5, button_col6 = st.columns(6)
-    
-    with button_col1:
-        if st.button("💾 Guardar"):
-            st.success("Registo guardado!")
-    
-    with button_col2:
-        if st.button("🖨️ Imprimir"):
-            st.info("Documento preparado para impressão")
-    
-    with button_col3:
-        if st.button("📧 Enviar"):
-            st.info("Documento enviado")
-    
-    with button_col4:
-        if st.button("📁 Arquivo"):
-            st.info("Documento arquivado")
-    
-    with button_col5:
-        if st.button("🔄 Atualizar"):
-            st.info("Interface atualizada")
-    
-    with button_col6:
-        if st.button("❌ Sair"):
-            st.session_state.current_screen = 'agenda'
-            st.session_state.selected_patient = None
-            st.rerun()
-
-# Controle principal
+# Main App Logic
 def main():
-    if st.session_state.current_screen == 'agenda':
-        show_agenda_screen()
-    elif st.session_state.current_screen == 'consulta':
-        show_consultation_screen()
+    # Sidebar com informações
+    with st.sidebar:
+        st.markdown("### 🏥 SClínico")
+        st.markdown("**Sistema de Gestão Clínica**")
+        st.markdown("---")
+        st.markdown(f"**Utilizador:** Dr. Sistema")
+        st.markdown(f"**Data:** {datetime.now().strftime('%d/%m/%Y')}")
+        st.markdown(f"**Hora:** {datetime.now().strftime('%H:%M')}")
+        st.markdown("---")
+        
+        # Informações da sessão atual
+        if st.session_state.current_screen == 'soap' and st.session_state.selected_consultation:
+            st.markdown("### 📋 Consulta Atual")
+            consultation = st.session_state.selected_consultation
+            st.write(f"**Paciente:** {consultation['patient']}")
+            st.write(f"**Hora:** {consultation['time']}")
+            st.write(f"**Nº Utente:** {consultation['patient_number']}")
+    
+    # Mostrar ecrã apropriado
+    if st.session_state.current_screen == 'consultas':
+        show_consultations_screen()
+    elif st.session_state.current_screen == 'soap':
+        show_soap_screen()
 
 if __name__ == "__main__":
     main()
