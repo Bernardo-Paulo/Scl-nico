@@ -469,7 +469,7 @@ def show_consultations_screen():
         <div style="display: flex; align-items: center; gap: 15px; font-size: 12px;">
             <span>Perfil: MÉDICO</span>
             <span>AGENDA</span>
-            <span style="color: #0066CC;">▶ Consultas do Dia</span>
+            <span style="color: #0066CC;"> Consultas do Dia</span>
             <span>Consultas Urgentes</span>
             <span>Consultas Domiciliárias</span>
             <span style="margin-left: auto;">{}</span>
