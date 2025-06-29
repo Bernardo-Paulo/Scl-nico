@@ -603,7 +603,7 @@ def show_consultations_screen():
                 <div style="flex: 1;">
                     <strong>AGREGADO FAMILIAR:</strong><br>
                     <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
-                        <div>🔹 Família selecionada</div>
+                        <div>Família selecionada</div>
                         <div>Andrea Ramalho Areias Baptista 26|21|05 1500</div>
                         <div>Ana Sousa Baptista Barreiros Graf 34|03|05 2000</div>
                         <div>Teresinha Marcellino Garcez Lisboa 44|21|05 2012</div>
@@ -613,7 +613,7 @@ def show_consultations_screen():
                     <strong>CONSULTAS AGENDADAS:</strong><br>
                     <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 80px;">
                         <div style="font-size: 10px;">
-                            <div>📅 Próximas consultas:</div>
+                            <div>Próximas consultas:</div>
                             <div>02/07/2025 - Consulta de Enfermagem - Lucinda</div>
                             <div>15/07/2025 - Consulta Médica - Dr. Cardoso</div>
                             <div>20/07/2025 - Consulta de Enfermagem - Lucinda</div>
@@ -638,10 +638,10 @@ def show_consultations_screen():
                 </div>
                 <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 400px;">
                     <div><strong>Consultas anteriores:</strong></div>
-                    <div>📋 25/06 - SILVA, JOÃO - Cardiologia</div>
-                    <div>📋 24/06 - FERREIRA, ANTÓNIO - Diabetes</div>
-                    <div>📋 24/06 - RODRIGUES, ISABEL - Plan. Familiar</div>
-                    <div>📋 23/06 - ALMEIDA, TERESA - Pneumonia</div>
+                    <div>25/06 - SILVA, JOÃO - Cardiologia</div>
+                    <div>24/06 - FERREIRA, ANTÓNIO - Diabetes</div>
+                    <div>24/06 - RODRIGUES, ISABEL - Plan. Familiar</div>
+                    <div>23/06 - ALMEIDA, TERESA - Pneumonia</div>
                     <div>22/06 - SANTOS, MARIA - Rotina</div>
                     <div>22/06 - COSTA, ANA - Hipertensão</div>
                     <div>21/06 - PEREIRA, CARLOS - Check-up</div>
