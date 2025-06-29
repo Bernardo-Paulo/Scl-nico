@@ -516,7 +516,7 @@ def show_consultations_screen():
         st.markdown("""
         <div style="background-color: #F0F0F0; border: 1px solid #ccc; margin-bottom: 10px;">
             <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
-                📅 Agenda - {} - Consultas do Dia
+                Agenda - {} - Consultas do Dia
             </div>
         </div>
         """.format(datetime.now().strftime("%d.%m.%Y")), unsafe_allow_html=True)
