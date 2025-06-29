@@ -238,43 +238,107 @@ st.markdown("""
     }
 </style>
 
+st.markdown("""
+<style>
+    /* ... todo o CSS existente permanece igual ... */
+    
+    /* Adicionar ao final do CSS: */
+    .keyboard-listener {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+    }
+</style>
+
 <script>
-// Script para capturar teclas de navegação
-document.addEventListener('DOMContentLoaded', function() {
-    function setupKeyboardNavigation() {
-        document.addEventListener('keydown', function(event) {
-            // Apenas processar se não estiver em um campo de input
-            if (event.target.tagName.toLowerCase() === 'input' || 
-                event.target.tagName.toLowerCase() === 'textarea') {
-                return;
+// Script melhorado para capturar teclas de navegação
+(function() {
+    let navigationEnabled = true;
+    
+    function handleKeyDown(event) {
+        // Verificar se estamos em um campo de input/textarea
+        const activeElement = document.activeElement;
+        const isInputField = activeElement && (
+            activeElement.tagName.toLowerCase() === 'input' || 
+            activeElement.tagName.toLowerCase() === 'textarea' ||
+            activeElement.contentEditable === 'true'
+        );
+        
+        if (isInputField) {
+            return; // Não interferir quando estiver digitando
+        }
+        
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            if (!navigationEnabled) return;
+            navigationEnabled = false; // Prevenir múltiplos eventos
+            
+            // Encontrar e clicar no botão apropriado
+            const direction = event.key === 'ArrowDown' ? 'down' : 'up';
+            const buttonId = direction === 'down' ? 'nav_down' : 'nav_up';
+            
+            // Procurar pelo botão usando diferentes métodos
+            let button = document.querySelector(`[data-testid="baseButton-secondary"][key="${buttonId}"]`) ||
+                        document.querySelector(`button[title*="${direction === 'down' ? 'Próximo' : 'Anterior'}"]`) ||
+                        document.querySelector(`button:contains("${direction === 'down' ? '⬇️' : '⬆️'}")`);
+            
+            if (!button) {
+                // Método alternativo: procurar por todos os botões e filtrar pelo texto
+                const buttons = document.querySelectorAll('button');
+                for (let btn of buttons) {
+                    if (btn.textContent.includes(direction === 'down' ? '⬇️' : '⬆️')) {
+                        button = btn;
+                        break;
+                    }
+                }
             }
             
-            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                event.preventDefault();
-                
-                // Disparar evento customizado para o Streamlit
-                const direction = event.key === 'ArrowDown' ? 'down' : 'up';
-                window.parent.postMessage({
-                    type: 'keyboard_navigation',
-                    direction: direction
-                }, '*');
+            if (button && !button.disabled) {
+                button.click();
             }
-        });
+            
+            // Re-habilitar navegação após um pequeno delay
+            setTimeout(() => {
+                navigationEnabled = true;
+            }, 100);
+        }
     }
     
-    // Executar quando a página carregar
-    setupKeyboardNavigation();
+    // Remover listeners anteriores se existirem
+    document.removeEventListener('keydown', handleKeyDown, true);
     
-    // Re-executar quando o Streamlit atualizar
+    // Adicionar listener com capture=true para garantir que pegue o evento primeiro
+    document.addEventListener('keydown', handleKeyDown, true);
+    
+    // Re-adicionar listener quando o Streamlit recarrega
     const observer = new MutationObserver(function(mutations) {
-        setupKeyboardNavigation();
+        // Verificar se houve mudanças significativas na página
+        let shouldReattach = false;
+        mutations.forEach(mutation => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                shouldReattach = true;
+            }
+        });
+        
+        if (shouldReattach) {
+            setTimeout(() => {
+                document.removeEventListener('keydown', handleKeyDown, true);
+                document.addEventListener('keydown', handleKeyDown, true);
+            }, 100);
+        }
     });
     
     observer.observe(document.body, {
         childList: true,
         subtree: true
     });
-});
+})();
 </script>
 """, unsafe_allow_html=True)
 
@@ -416,11 +480,12 @@ def show_consultations_screen():
     # Instruções de navegação
     st.markdown("""
     <div style="background-color: #E6F3FF; border: 1px solid #B0D4F1; padding: 5px 10px; margin: 10px 0; font-size: 11px;">
-        💡 <strong>Navegação:</strong> Selecione um utente e use as setas ↑↓ do teclado para navegar na lista
+        💡 <strong>Navegação:</strong> Use as setas ↑↓ do teclado para navegar na lista de utentes
     </div>
     """, unsafe_allow_html=True)
     
-    # Botões de navegação por teclado (invisíveis, mas funcionais)
+    # Botões de navegação invisíveis mas funcionais para o JavaScript
+    st.markdown('<div style="position: absolute; left: -9999px; opacity: 0;">', unsafe_allow_html=True)
     col_nav1, col_nav2 = st.columns([1, 1])
     with col_nav1:
         if st.button("⬆️ Anterior", key="nav_up", help="Navegar para utente anterior"):
@@ -430,6 +495,7 @@ def show_consultations_screen():
         if st.button("⬇️ Próximo", key="nav_down", help="Navegar para próximo utente"):
             navigate_keyboard('down')
             st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
     
     # Botão SOAP no topo
     st.markdown("---")
@@ -584,6 +650,9 @@ def show_consultations_screen():
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+    # Listener invisível para captura de teclado
+    st.markdown('<div class="keyboard-listener"></div>', unsafe_allow_html=True)
 
 def show_soap_screen():
     # Header
