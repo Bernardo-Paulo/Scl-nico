@@ -238,107 +238,43 @@ st.markdown("""
     }
 </style>
 
-st.markdown("""
-<style>
-    /* ... todo o CSS existente permanece igual ... */
-    
-    /* Adicionar ao final do CSS: */
-    .keyboard-listener {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: -1;
-    }
-</style>
-
 <script>
-// Script melhorado para capturar teclas de navegação
-(function() {
-    let navigationEnabled = true;
-    
-    function handleKeyDown(event) {
-        // Verificar se estamos em um campo de input/textarea
-        const activeElement = document.activeElement;
-        const isInputField = activeElement && (
-            activeElement.tagName.toLowerCase() === 'input' || 
-            activeElement.tagName.toLowerCase() === 'textarea' ||
-            activeElement.contentEditable === 'true'
-        );
-        
-        if (isInputField) {
-            return; // Não interferir quando estiver digitando
-        }
-        
-        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            if (!navigationEnabled) return;
-            navigationEnabled = false; // Prevenir múltiplos eventos
-            
-            // Encontrar e clicar no botão apropriado
-            const direction = event.key === 'ArrowDown' ? 'down' : 'up';
-            const buttonId = direction === 'down' ? 'nav_down' : 'nav_up';
-            
-            // Procurar pelo botão usando diferentes métodos
-            let button = document.querySelector(`[data-testid="baseButton-secondary"][key="${buttonId}"]`) ||
-                        document.querySelector(`button[title*="${direction === 'down' ? 'Próximo' : 'Anterior'}"]`) ||
-                        document.querySelector(`button:contains("${direction === 'down' ? '⬇️' : '⬆️'}")`);
-            
-            if (!button) {
-                // Método alternativo: procurar por todos os botões e filtrar pelo texto
-                const buttons = document.querySelectorAll('button');
-                for (let btn of buttons) {
-                    if (btn.textContent.includes(direction === 'down' ? '⬇️' : '⬆️')) {
-                        button = btn;
-                        break;
-                    }
-                }
+// Script para capturar teclas de navegação
+document.addEventListener('DOMContentLoaded', function() {
+    function setupKeyboardNavigation() {
+        document.addEventListener('keydown', function(event) {
+            // Apenas processar se não estiver em um campo de input
+            if (event.target.tagName.toLowerCase() === 'input' || 
+                event.target.tagName.toLowerCase() === 'textarea') {
+                return;
             }
             
-            if (button && !button.disabled) {
-                button.click();
-            }
-            
-            // Re-habilitar navegação após um pequeno delay
-            setTimeout(() => {
-                navigationEnabled = true;
-            }, 100);
-        }
-    }
-    
-    // Remover listeners anteriores se existirem
-    document.removeEventListener('keydown', handleKeyDown, true);
-    
-    // Adicionar listener com capture=true para garantir que pegue o evento primeiro
-    document.addEventListener('keydown', handleKeyDown, true);
-    
-    // Re-adicionar listener quando o Streamlit recarrega
-    const observer = new MutationObserver(function(mutations) {
-        // Verificar se houve mudanças significativas na página
-        let shouldReattach = false;
-        mutations.forEach(mutation => {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                shouldReattach = true;
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                
+                // Disparar evento customizado para o Streamlit
+                const direction = event.key === 'ArrowDown' ? 'down' : 'up';
+                window.parent.postMessage({
+                    type: 'keyboard_navigation',
+                    direction: direction
+                }, '*');
             }
         });
-        
-        if (shouldReattach) {
-            setTimeout(() => {
-                document.removeEventListener('keydown', handleKeyDown, true);
-                document.addEventListener('keydown', handleKeyDown, true);
-            }, 100);
-        }
+    }
+    
+    // Executar quando a página carregar
+    setupKeyboardNavigation();
+    
+    // Re-executar quando o Streamlit atualizar
+    const observer = new MutationObserver(function(mutations) {
+        setupKeyboardNavigation();
     });
     
     observer.observe(document.body, {
         childList: true,
         subtree: true
     });
-})();
+});
 </script>
 """, unsafe_allow_html=True)
 
@@ -459,7 +395,7 @@ def show_consultations_screen():
     # Header azul do SClínico
     st.markdown("""
     <div style="background-color: #4472C4; color: white; padding: 5px 10px; margin: -1rem -2rem 0 -2rem; font-size: 14px; font-weight: bold;">
-        SClínico - Dr(a) Bessa Cardoso - Ucsp Bremer Porto
+        📋 SClínico - Dr(a) Bessa Cardoso - Ucsp Bremer Porto
     </div>
     """, unsafe_allow_html=True)
     
@@ -469,7 +405,7 @@ def show_consultations_screen():
         <div style="display: flex; align-items: center; gap: 15px; font-size: 12px;">
             <span>Perfil: MÉDICO</span>
             <span>AGENDA</span>
-            <span style="color: #0066CC;"> Consultas do Dia</span>
+            <span style="color: #0066CC;">▶ Consultas do Dia</span>
             <span>Consultas Urgentes</span>
             <span>Consultas Domiciliárias</span>
             <span style="margin-left: auto;">{}</span>
@@ -480,12 +416,11 @@ def show_consultations_screen():
     # Instruções de navegação
     st.markdown("""
     <div style="background-color: #E6F3FF; border: 1px solid #B0D4F1; padding: 5px 10px; margin: 10px 0; font-size: 11px;">
-        <strong>Navegação:</strong> Use as setas do teclado para navegar na lista de utentes
+        💡 <strong>Navegação:</strong> Selecione um utente e use as setas ↑↓ do teclado para navegar na lista
     </div>
     """, unsafe_allow_html=True)
     
-    # Botões de navegação invisíveis mas funcionais para o JavaScript
-    st.markdown('<div style="position: absolute; left: -9999px; opacity: 0;">', unsafe_allow_html=True)
+    # Botões de navegação por teclado (invisíveis, mas funcionais)
     col_nav1, col_nav2 = st.columns([1, 1])
     with col_nav1:
         if st.button("⬆️ Anterior", key="nav_up", help="Navegar para utente anterior"):
@@ -495,7 +430,6 @@ def show_consultations_screen():
         if st.button("⬇️ Próximo", key="nav_down", help="Navegar para próximo utente"):
             navigate_keyboard('down')
             st.rerun()
-    st.markdown('</div>', unsafe_allow_html=True)
     
     # Botão SOAP no topo
     st.markdown("---")
@@ -516,7 +450,7 @@ def show_consultations_screen():
         st.markdown("""
         <div style="background-color: #F0F0F0; border: 1px solid #ccc; margin-bottom: 10px;">
             <div style="background-color: #4472C4; color: white; padding: 3px; font-size: 11px; font-weight: bold;">
-                Agenda - {} - Consultas do Dia
+                📅 Agenda - {} - Consultas do Dia
             </div>
         </div>
         """.format(datetime.now().strftime("%d.%m.%Y")), unsafe_allow_html=True)
@@ -603,7 +537,7 @@ def show_consultations_screen():
                 <div style="flex: 1;">
                     <strong>AGREGADO FAMILIAR:</strong><br>
                     <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0;">
-                        <div>Família selecionada</div>
+                        <div>🔹 Família selecionada</div>
                         <div>Andrea Ramalho Areias Baptista 26|21|05 1500</div>
                         <div>Ana Sousa Baptista Barreiros Graf 34|03|05 2000</div>
                         <div>Teresinha Marcellino Garcez Lisboa 44|21|05 2012</div>
@@ -613,7 +547,7 @@ def show_consultations_screen():
                     <strong>CONSULTAS AGENDADAS:</strong><br>
                     <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 80px;">
                         <div style="font-size: 10px;">
-                            <div>Próximas consultas:</div>
+                            <div>📅 Próximas consultas:</div>
                             <div>02/07/2025 - Consulta de Enfermagem - Lucinda</div>
                             <div>15/07/2025 - Consulta Médica - Dr. Cardoso</div>
                             <div>20/07/2025 - Consulta de Enfermagem - Lucinda</div>
@@ -638,10 +572,10 @@ def show_consultations_screen():
                 </div>
                 <div style="background-color: white; border: 1px solid #ccc; padding: 3px; margin: 2px 0; min-height: 400px;">
                     <div><strong>Consultas anteriores:</strong></div>
-                    <div>25/06 - SILVA, JOÃO - Cardiologia</div>
-                    <div>24/06 - FERREIRA, ANTÓNIO - Diabetes</div>
-                    <div>24/06 - RODRIGUES, ISABEL - Plan. Familiar</div>
-                    <div>23/06 - ALMEIDA, TERESA - Pneumonia</div>
+                    <div>📋 25/06 - SILVA, JOÃO - Cardiologia</div>
+                    <div>📋 24/06 - FERREIRA, ANTÓNIO - Diabetes</div>
+                    <div>📋 24/06 - RODRIGUES, ISABEL - Plan. Familiar</div>
+                    <div>📋 23/06 - ALMEIDA, TERESA - Pneumonia</div>
                     <div>22/06 - SANTOS, MARIA - Rotina</div>
                     <div>22/06 - COSTA, ANA - Hipertensão</div>
                     <div>21/06 - PEREIRA, CARLOS - Check-up</div>
@@ -650,9 +584,6 @@ def show_consultations_screen():
             </div>
         </div>
         """, unsafe_allow_html=True)
-
-    # Listener invisível para captura de teclado
-    st.markdown('<div class="keyboard-listener"></div>', unsafe_allow_html=True)
 
 def show_soap_screen():
     # Header
@@ -692,7 +623,7 @@ def show_soap_screen():
     """, unsafe_allow_html=True)
     
     # Número de utente
-    st.markdown("**Número de Utente:**")
+    st.markdown("*Número de Utente:*")
     patient_number = st.text_input("", value=selected_consultation['patient_number'], key="patient_num")
     st.session_state.patient_number = patient_number
     
@@ -704,7 +635,7 @@ def show_soap_screen():
         saved_soap = {'S': '', 'O': '', 'A': '', 'P': ''}
     
     # Registo SOAP
-    st.markdown("**Registo SOAP:**")
+    st.markdown("*Registo SOAP:*")
     
     # Container para as caixas SOAP
     st.markdown('<div class="soap-container">', unsafe_allow_html=True)
@@ -758,21 +689,21 @@ def show_soap_screen():
             # Mostrar prévia
             with st.expander("📄 Prévia da impressão"):
                 st.markdown(f"""
-                **REGISTO SOAP - {selected_consultation['patient']}**
+                *REGISTO SOAP - {selected_consultation['patient']}*
                 
-                **Data:** {now.strftime("%d/%m/%Y %H:%M")}  
-                **Utente:** {selected_consultation['patient_number']}
+                *Data:* {now.strftime("%d/%m/%Y %H:%M")}  
+                *Utente:* {selected_consultation['patient_number']}
                 
-                **S - Subjetivo:**  
+                *S - Subjetivo:*  
                 {soap_s or "Não preenchido"}
                 
-                **O - Objetivo:**  
+                *O - Objetivo:*  
                 {soap_o or "Não preenchido"}
                 
-                **A - Avaliação:**  
+                *A - Avaliação:*  
                 {soap_a or "Não preenchido"}
                 
-                **P - Plano:**  
+                *P - Plano:*  
                 {soap_p or "Não preenchido"}
                 """)
     
@@ -807,5 +738,5 @@ def main():
     elif st.session_state.current_screen == 'soap':
         show_soap_screen()
 
-if __name__ == "__main__":
+if _name_ == "_main_":
     main()
