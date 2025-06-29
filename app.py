@@ -738,5 +738,5 @@ def main():
     elif st.session_state.current_screen == 'soap':
         show_soap_screen()
 
-if _name_ == "_main_":
+if __name__ == "_main_":
     main()
