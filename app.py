@@ -459,7 +459,7 @@ def show_consultations_screen():
     # Header azul do SClínico
     st.markdown("""
     <div style="background-color: #4472C4; color: white; padding: 5px 10px; margin: -1rem -2rem 0 -2rem; font-size: 14px; font-weight: bold;">
-        📋 SClínico - Dr(a) Bessa Cardoso - Ucsp Bremer Porto
+        SClínico - Dr(a) Bessa Cardoso - Ucsp Bremer Porto
     </div>
     """, unsafe_allow_html=True)
     
