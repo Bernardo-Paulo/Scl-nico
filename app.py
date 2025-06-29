@@ -480,7 +480,7 @@ def show_consultations_screen():
     # Instruções de navegação
     st.markdown("""
     <div style="background-color: #E6F3FF; border: 1px solid #B0D4F1; padding: 5px 10px; margin: 10px 0; font-size: 11px;">
-        <strong>Navegação:</strong> Use as setas ↑↓ do teclado para navegar na lista de utentes
+        <strong>Navegação:</strong> Use as setas do teclado para navegar na lista de utentes
     </div>
     """, unsafe_allow_html=True)
     
