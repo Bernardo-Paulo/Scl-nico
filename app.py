@@ -225,57 +225,7 @@ st.markdown("""
         opacity: 0 !important;
         pointer-events: none !important;
     }
-    
-    /* Container invisível para capturar eventos de teclado */
-    .keyboard-capture {
-        position: fixed;
-        top: -1000px;
-        left: -1000px;
-        width: 1px;
-        height: 1px;
-        opacity: 0;
-        pointer-events: none;
-    }
 </style>
-
-<script>
-// Script para capturar teclas de navegação
-document.addEventListener('DOMContentLoaded', function() {
-    function setupKeyboardNavigation() {
-        document.addEventListener('keydown', function(event) {
-            // Apenas processar se não estiver em um campo de input
-            if (event.target.tagName.toLowerCase() === 'input' || 
-                event.target.tagName.toLowerCase() === 'textarea') {
-                return;
-            }
-            
-            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
-                event.preventDefault();
-                
-                // Disparar evento customizado para o Streamlit
-                const direction = event.key === 'ArrowDown' ? 'down' : 'up';
-                window.parent.postMessage({
-                    type: 'keyboard_navigation',
-                    direction: direction
-                }, '*');
-            }
-        });
-    }
-    
-    // Executar quando a página carregar
-    setupKeyboardNavigation();
-    
-    // Re-executar quando o Streamlit atualizar
-    const observer = new MutationObserver(function(mutations) {
-        setupKeyboardNavigation();
-    });
-    
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-});
-</script>
 """, unsafe_allow_html=True)
 
 # Inicializar estado da sessão
@@ -293,36 +243,6 @@ if 'soap_data' not in st.session_state:
     }
 if 'consultation_soap_data' not in st.session_state:
     st.session_state.consultation_soap_data = {}
-if 'keyboard_navigation_trigger' not in st.session_state:
-    st.session_state.keyboard_navigation_trigger = 0
-
-# Função para navegar com teclado
-def navigate_keyboard(direction):
-    if st.session_state.selected_consultation_id is None:
-        # Se nenhum selecionado, selecionar o primeiro
-        if st.session_state.consultations:
-            st.session_state.selected_consultation_id = st.session_state.consultations[0]['id']
-        return
-    
-    # Encontrar índice atual
-    current_index = None
-    for i, consultation in enumerate(st.session_state.consultations):
-        if consultation['id'] == st.session_state.selected_consultation_id:
-            current_index = i
-            break
-    
-    if current_index is None:
-        return
-    
-    # Calcular novo índice
-    if direction == 'down':
-        new_index = min(current_index + 1, len(st.session_state.consultations) - 1)
-    else:  # up
-        new_index = max(current_index - 1, 0)
-    
-    # Selecionar nova consulta
-    if new_index != current_index:
-        st.session_state.selected_consultation_id = st.session_state.consultations[new_index]['id']
 
 # Gerar consultas (só uma vez)
 def generate_consultations():
@@ -412,24 +332,6 @@ def show_consultations_screen():
         </div>
     </div>
     """.format(datetime.now().strftime("%d/%m/%Y %H:%M")), unsafe_allow_html=True)
-    
-    # Instruções de navegação
-    st.markdown("""
-    <div style="background-color: #E6F3FF; border: 1px solid #B0D4F1; padding: 5px 10px; margin: 10px 0; font-size: 11px;">
-        💡 <strong>Navegação:</strong> Selecione um utente e use as setas ↑↓ do teclado para navegar na lista
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Botões de navegação por teclado (invisíveis, mas funcionais)
-    col_nav1, col_nav2 = st.columns([1, 1])
-    with col_nav1:
-        if st.button("⬆️ Anterior", key="nav_up", help="Navegar para utente anterior"):
-            navigate_keyboard('up')
-            st.rerun()
-    with col_nav2:
-        if st.button("⬇️ Próximo", key="nav_down", help="Navegar para próximo utente"):
-            navigate_keyboard('down')
-            st.rerun()
     
     # Botão SOAP no topo
     st.markdown("---")
@@ -623,7 +525,7 @@ def show_soap_screen():
     """, unsafe_allow_html=True)
     
     # Número de utente
-    st.markdown("*Número de Utente:*")
+    st.markdown("**Número de Utente:**")
     patient_number = st.text_input("", value=selected_consultation['patient_number'], key="patient_num")
     st.session_state.patient_number = patient_number
     
@@ -635,7 +537,7 @@ def show_soap_screen():
         saved_soap = {'S': '', 'O': '', 'A': '', 'P': ''}
     
     # Registo SOAP
-    st.markdown("*Registo SOAP:*")
+    st.markdown("**Registo SOAP:**")
     
     # Container para as caixas SOAP
     st.markdown('<div class="soap-container">', unsafe_allow_html=True)
@@ -689,21 +591,21 @@ def show_soap_screen():
             # Mostrar prévia
             with st.expander("📄 Prévia da impressão"):
                 st.markdown(f"""
-                *REGISTO SOAP - {selected_consultation['patient']}*
+                **REGISTO SOAP - {selected_consultation['patient']}**
                 
-                *Data:* {now.strftime("%d/%m/%Y %H:%M")}  
-                *Utente:* {selected_consultation['patient_number']}
+                **Data:** {now.strftime("%d/%m/%Y %H:%M")}  
+                **Utente:** {selected_consultation['patient_number']}
                 
-                *S - Subjetivo:*  
+                **S - Subjetivo:**  
                 {soap_s or "Não preenchido"}
                 
-                *O - Objetivo:*  
+                **O - Objetivo:**  
                 {soap_o or "Não preenchido"}
                 
-                *A - Avaliação:*  
+                **A - Avaliação:**  
                 {soap_a or "Não preenchido"}
                 
-                *P - Plano:*  
+                **P - Plano:**  
                 {soap_p or "Não preenchido"}
                 """)
     
@@ -738,5 +640,5 @@ def main():
     elif st.session_state.current_screen == 'soap':
         show_soap_screen()
 
-if __name__ == "_main_":
+if __name__ == "__main__":
     main()
