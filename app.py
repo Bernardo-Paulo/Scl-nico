@@ -12,6 +12,19 @@ st.set_page_config(
 
 # CSS personalizado para imitar o SClínico
 st.markdown("""
+<script>
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        
+        // Buscar o botão correspondente à navegação
+        const navButton = document.querySelector('[data-testid="stButton"] button[title="Navegar com setas"]');
+        if (navButton) {
+            navButton.click();
+        }
+    }
+});
+</script>
 <style>
     /* Remover padding padrão do Streamlit */
     .block-container {
@@ -255,6 +268,12 @@ def generate_consultations():
             "COSTA, ANA RITA", "PEREIRA, CARLOS ALBERTO", "RODRIGUES, ISABEL MARIA",
             "OLIVEIRA, MANUEL JOAQUIM"
         ]
+
+        # Números fixos de utente (não mudam no refresh)
+        fixed_patient_numbers = [
+            "123456789", "234567890", "345678901", "456789012", 
+            "567890123", "678901234", "789012345"
+        ]
         
         # Dados SOAP pré-preenchidos para os primeiros 5 utentes
         soap_examples = {
@@ -296,7 +315,7 @@ def generate_consultations():
                 'id': i,
                 'time': time_slot,
                 'patient': names[i] if i < len(names) else f"PACIENTE {i+1}",
-                'patient_number': f'{random.randint(100000000, 999999999)}',
+                'patient_number': fixed_patient_numbers[i],
                 'birth_date': f"{random.randint(1940, 2000)}-{random.randint(1,12):02d}-{random.randint(1,28):02d}",
                 'room': f"Gab. {random.randint(1, 6)}",
                 'status': 'Agendada'
@@ -310,6 +329,22 @@ def generate_consultations():
         st.session_state.consultations = consultations
     
     return st.session_state.consultations
+
+def navigate_consultations(direction):
+    """Navega entre consultas com as setas do teclado"""
+    if not st.session_state.consultations:
+        return
+    
+    current_id = st.session_state.selected_consultation_id
+    
+    if current_id is None:
+        # Se nenhuma selecionada, selecionar a primeira
+        st.session_state.selected_consultation_id = 0
+    else:
+        if direction == 'down' and current_id < len(st.session_state.consultations) - 1:
+            st.session_state.selected_consultation_id = current_id + 1
+        elif direction == 'up' and current_id > 0:
+            st.session_state.selected_consultation_id = current_id - 1
 
 def show_consultations_screen():
     # Header azul do SClínico
@@ -343,6 +378,25 @@ def show_consultations_screen():
             if st.session_state.selected_consultation_id is not None:
                 st.session_state.current_screen = 'soap'
                 st.rerun()
+
+    # Botão invisível para navegação por teclado
+    if st.button("", key="keyboard_nav", help="Navegar com setas", 
+                type="secondary", use_container_width=False):
+        # Detectar última tecla pressionada (simplificado)
+        navigate_consultations('down')
+        st.rerun()
+
+    # CSS para esconder o botão
+    st.markdown("""
+    <style>
+    button[title="Navegar com setas"] {
+        opacity: 0 !important;
+        position: absolute !important;
+        left: -9999px !important;
+        pointer-events: none !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
     
     # Layout principal em 2 colunas
     col_main, col_side = st.columns([8, 2])
