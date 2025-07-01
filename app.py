@@ -13,16 +13,18 @@ st.set_page_config(
 # CSS personalizado para imitar o SClínico
 st.markdown("""
 <script>
-document.addEventListener('keydown', function(event) {
+window.addEventListener('keydown', function(event) {
     if (event.key === 'ArrowDown') {
         event.preventDefault();
-        const nextBtn = document.querySelector('button[data-testid*="nav_down"]');
-        if (nextBtn) nextBtn.click();
+        const buttons = document.querySelectorAll('[data-testid="stButton"] button');
+        const navBtn = Array.from(buttons).find(btn => btn.textContent.includes('▼'));
+        if (navBtn) navBtn.click();
     }
     if (event.key === 'ArrowUp') {
         event.preventDefault();
-        const prevBtn = document.querySelector('button[data-testid*="nav_up"]');
-        if (prevBtn) prevBtn.click();
+        const buttons = document.querySelectorAll('[data-testid="stButton"] button');
+        const navBtn = Array.from(buttons).find(btn => btn.textContent.includes('▲'));
+        if (navBtn) navBtn.click();
     }
 });
 </script>
@@ -379,6 +381,16 @@ def show_consultations_screen():
             if st.session_state.selected_consultation_id is not None:
                 st.session_state.current_screen = 'soap'
                 st.rerun()
+
+    with col2:
+        if st.button("▲", key="nav_up", help="Utente anterior"):
+            navigate_consultations('up')
+            st.rerun()
+
+    with col3:
+        if st.button("▼", key="nav_down", help="Próximo utente"):  
+            navigate_consultations('down')
+            st.rerun()
 
     col1, col2, col3, col4 = st.columns([1, 1, 1, 7])
     
