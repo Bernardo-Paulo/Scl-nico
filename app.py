@@ -14,14 +14,15 @@ st.set_page_config(
 st.markdown("""
 <script>
 document.addEventListener('keydown', function(event) {
-    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+    if (event.key === 'ArrowDown') {
         event.preventDefault();
-        
-        // Buscar o botão correspondente à navegação
-        const navButton = document.querySelector('[data-testid="stButton"] button[title="Navegar com setas"]');
-        if (navButton) {
-            navButton.click();
-        }
+        const nextBtn = document.querySelector('button[data-testid*="nav_down"]');
+        if (nextBtn) nextBtn.click();
+    }
+    if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prevBtn = document.querySelector('button[data-testid*="nav_up"]');
+        if (prevBtn) prevBtn.click();
     }
 });
 </script>
@@ -245,7 +246,7 @@ document.addEventListener('keydown', function(event) {
 if 'current_screen' not in st.session_state:
     st.session_state.current_screen = 'consultas'
 if 'selected_consultation_id' not in st.session_state:
-    st.session_state.selected_consultation_id = None
+    st.session_state.selected_consultation_id = 0
 if 'consultations' not in st.session_state:
     st.session_state.consultations = []
 if 'patient_number' not in st.session_state:
@@ -370,7 +371,7 @@ def show_consultations_screen():
     
     # Botão SOAP no topo
     st.markdown("---")
-    col1, col2, col3 = st.columns([1, 8, 1])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 7])
     with col1:
         soap_disabled = st.session_state.selected_consultation_id is None
         if st.button("📋 SOAP", disabled=soap_disabled, key="soap_btn_top", 
@@ -379,24 +380,7 @@ def show_consultations_screen():
                 st.session_state.current_screen = 'soap'
                 st.rerun()
 
-    # Botão invisível para navegação por teclado
-    if st.button("", key="keyboard_nav", help="Navegar com setas", 
-                type="secondary", use_container_width=False):
-        # Detectar última tecla pressionada (simplificado)
-        navigate_consultations('down')
-        st.rerun()
-
-    # CSS para esconder o botão
-    st.markdown("""
-    <style>
-    button[title="Navegar com setas"] {
-        opacity: 0 !important;
-        position: absolute !important;
-        left: -9999px !important;
-        pointer-events: none !important;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 7])
     
     # Layout principal em 2 colunas
     col_main, col_side = st.columns([8, 2])
