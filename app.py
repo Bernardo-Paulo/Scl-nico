@@ -267,7 +267,7 @@ def generate_consultations():
         today = datetime.now()
         
         names = [
-            "SILVA, JOÃO CARLOS", "SANTOS, MARIA JOSÉ", "FERREIRA, ANTÓNIO MANUEL", 
+            "João Carlos Silva", "Maria José Santos", "António Manuel Ferreira", 
             "COSTA, ANA RITA", "PEREIRA, CARLOS ALBERTO", "RODRIGUES, ISABEL MARIA",
             "OLIVEIRA, MANUEL JOAQUIM"
         ]
@@ -280,19 +280,19 @@ def generate_consultations():
         
         # Dados SOAP pré-preenchidos para os primeiros 5 utentes
         soap_examples = {
-            0: {  # SILVA, JOÃO CARLOS
+            0: {  # João Carlos Silva
                 'S': 'Paciente queixa-se de dor torácica há 2 dias, tipo pontada, que piora com esforço. Nega dispneia ou palpitações. Refere episódios anteriores similares.',
                 'O': 'TA: 140/85 mmHg, FC: 78 bpm, FR: 16 irpm, Temp: 36.2°C. Auscultação cardíaca: sopro sistólico grau II/VI. Auscultação pulmonar normal. Abdómen mole, depressível.',
                 'A': 'Dor torácica atípica. Suspeita de cardiopatia isquémica. Hipertensão arterial controlada.',
                 'P': 'ECG + Analises (troponinas, colesterol). Referenciação para cardiologia. Manter anti-hipertensor. Reavaliação em 1 semana.'
             },
-            1: {  # SANTOS, MARIA JOSÉ
+            1: {  # Maria José Santos
                 'S': 'Paciente refere cefaleia há 1 semana, tipo pressão, localizada na região occipital. Piora com stress e melhora com repouso. Nega náuseas ou alterações visuais.',
                 'O': 'TA: 160/95 mmHg, FC: 82 bpm, temperatura: 36.1°C. Exame neurológico: sem alterações. Fundo de olho: sem papiledema. Pescoço: sem rigidez.',
                 'A': 'Cefaleia tensional. Hipertensão arterial não controlada.',
                 'P': 'Aumentar dose de anti-hipertensor. Paracetamol 1g se dor. Medição TA domiciliária. Retorno em 1 semana.'
             },
-            2: {  # FERREIRA, ANTÓNIO MANUEL
+            2: {  # António Manuel Ferreira
                 'S': 'Paciente diabético tipo 2, vem para consulta de rotina. Refere cumprimento da medicação. Nega sintomas de hipoglicemia. Dieta controlada.',
                 'O': 'Peso: 78kg, IMC: 26.5. TA: 130/80 mmHg. Glicemia capilar: 145 mg/dl. Pés sem lesões. Pulsos periféricos presentes.',
                 'A': 'Diabetes mellitus tipo 2 em controlo razoável. Ligeiro excesso de peso.',
