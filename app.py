@@ -267,7 +267,7 @@ def generate_consultations():
         today = datetime.now()
         
         names = [
-            "João Carlos Silva", "Maria José Santos", "António Manuel Ferreira", 
+            "João Carlos Silva", "Utente 1", "António Manuel Ferreira", 
             "COSTA, ANA RITA", "PEREIRA, CARLOS ALBERTO", "RODRIGUES, ISABEL MARIA",
             "OLIVEIRA, MANUEL JOAQUIM"
         ]
@@ -286,7 +286,7 @@ def generate_consultations():
                 'A': 'Dor torácica atípica. Suspeita de cardiopatia isquémica. Hipertensão arterial controlada.',
                 'P': 'ECG + Analises (troponinas, colesterol). Referenciação para cardiologia. Manter anti-hipertensor. Reavaliação em 1 semana.'
             },
-            1: {  # Maria José Santos
+            1: {  # Utente 1
                 'S': 'Paciente refere cefaleia há 1 semana, tipo pressão, localizada na região occipital. Piora com stress e melhora com repouso. Nega náuseas ou alterações visuais.',
                 'O': 'TA: 160/95 mmHg, FC: 82 bpm, temperatura: 36.1°C. Exame neurológico: sem alterações. Fundo de olho: sem papiledema. Pescoço: sem rigidez.',
                 'A': 'Cefaleia tensional. Hipertensão arterial não controlada.',
