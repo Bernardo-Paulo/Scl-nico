@@ -267,7 +267,7 @@ def generate_consultations():
         today = datetime.now()
         
         names = [
-            "João Carlos Silva", "Maria José Santos", "António Manuel Ferreira", 
+            "João Carlos Silva", "Utente 1", "António Manuel Ferreira", 
             "COSTA, ANA RITA", "PEREIRA, CARLOS ALBERTO", "RODRIGUES, ISABEL MARIA",
             "OLIVEIRA, MANUEL JOAQUIM"
         ]
